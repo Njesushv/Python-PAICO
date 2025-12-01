@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <meta charset="UTF-8">
+    <title>Gestión de Alumnos - JGM Consultores</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            min-height: 100vh;
+            font-size: 5px; /* escala general pequeña */
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 250px;
+            background: #1d3557;
+            color: white;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.8s ease;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background-color: #16324f;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sidebar-header img {
+            width: 130px;
+            border-radius: 8px;
+        }
+
+        .sidebar a {
+            color: #e9ecef;
+            text-decoration: none;
+            display: block;
+            padding: 8px 16px;
+            border-left: 4px solid transparent;
+            transition: all 0.3s;
+            font-size: 0.85rem;
+        }
+
+        .sidebar a:hover {
+            background-color: #457b9d;
+            border-left: 4px solid #a8dadc;
+        }
+
+        .sidebar a i {
+            font-size: 0.95rem;
+            margin-right: 6px;
+        }
+
+        .submenu {
+            background-color: #2a4d73;
+            display: none;
+        }
+
+        .submenu a {
+            padding-left: 40px;
+            font-size: 0.9rem;
+        }
+
+        .sidebar .active + .submenu {
+            display: block;
+        }
+
+        .logo-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-group img {
+            width: 90px;
+            border-radius: 8px;
+        }
+
+        .sidebar-qr-wrapper {
+            padding: 20px 45px 20px;
+        }
+
+        .sidebar-qr-wrapper .card {
+            width: 98%;
+            border-radius: 10px;
+        }
+
+        .sidebar-qr-wrapper img {
+            max-width: 120px;
+            height: auto;
+        }
+
+        .sidebar-qr-url {
+            font-size: 11px;
+            word-break: break-all;
+        }
+
+        .sidebar-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logout-link {
+            margin-top: auto;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #e9ecef;
+            text-decoration: none;
+            display: block;
+            padding: 12px 20px;
+            border-left: 4px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .logout-link:hover {
+            background-color: #457b9d;
+            border-left: 4px solid #a8dadc;
+        }
+
+        /* ===== CONTENIDO ===== */
+        .content {
+            flex-grow: 1;
+            padding: 10px;
+            font-size: 0.9rem;
+        }
+
+        .content h2 {
+            font-size: 1.4rem;
+        }
+
+        .content h5 {
+            font-size: 0.95rem;
+        }
+
+        .btn {
+            font-size: 0.85rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 0.35rem;
+        }
+
+        /* Charts: mismo tamaño de contenedor para Cursos y Sedes */
+        #chartCursos,
+        #chartSedes {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        #chartInstitucion {
+            max-width: 260px;
+            max-height: 260px;
+        }
+
+        .chart-wrapper {
+            width: 320px;
+            height: 240px;
+            margin: 0 auto;
+        }
+
+        /* Tarjetas de la fila 1 con misma altura */
+        .card-chart {
+            min-height: 360px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-chart .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Leyendas HTML personalizadas */
+        .chart-legend {
+            max-height: 80px;
+            overflow-y: auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px 12px;
+            font-size: 0.7rem;
+        }
+
+        .chart-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            max-width: 150px;
+            white-space: normal;
+            text-align: left;
+        }
+
+        .chart-legend-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== SIDEBAR ===== -->
+    <div class="sidebar">
+
+      <div class="sidebar-header">
+          <div class="logo-group">
+              <img src="{{ url_for('static', filename='logo_jgm.png') }}" alt="Logo JGM">
+              <img src="{{ url_for('static', filename='logo_icilt.png') }}" alt="Logo ICILT">
+          </div>
+
+          <h6 class="mt-2">JGM</h6>
+          <h6 class="mt-2">Juntos ganamos más</h6>
+      </div>
+
+      <div class="sidebar-main">
+
+          {% if rol|trim|lower == 'admin' %}
+          <a href="{{ url_for('responsables') }}"><i class="bi bi-person-square"></i> Responsables</a>
+          <a href="{{ url_for('administrar_sedes') }}"><i class="bi bi-pin-map"></i> Sedes</a>
+          {% endif %}
+
+          <a href="{{ url_for('horarios') }}"><i class="bi bi-calendar4-week"></i> Horarios</a>
+          
+          <a href="#" onclick="toggleMenu(this)"><i class="bi bi-bar-chart-steps"></i> Cursos</a>
+          <div class="submenu">
+              <a href="{{ url_for('agregar_curso') }}"><i class="bi bi-plus-circle"></i> Agregar Curso</a>
+              <a href="{{ url_for('administrar_cursos') }}"><i class="bi bi-postcard"></i> Administrar Cursos</a>
+          </div>
+
+          <a href="{{ url_for('administrar_docentes') }}"><i class="bi bi-journal-text"></i> Docentes</a>
+          
+          <a href="#" onclick="toggleMenu(this)"><i class="bi bi-clipboard-check"></i> Matriculas</a>
+          <div class="submenu">
+              <a href="{{ url_for('agregar') }}"><i class="bi bi-plus-circle"></i> Matricular Alumno</a>  
+              <a href="{{ url_for('administrar_matriculas') }}"><i class="bi bi-card-checklist"></i> Gestion Matriculas</a>
+              <a href="{{ url_for('listar_pagos') }}"><i class="bi bi-cash-coin"></i> Pagos Alumnos</a>
+              <a href="{{ url_for('pagos_pendientes') }}"><i class="bi bi-person-exclamation"></i> Pendiente de Pagos</a>
+          </div>
+
+          <a href="{{ url_for('asistencias_docentes') }}"><i class="bi bi-calendar-check"></i> Asistencias de Docentes</a>
+
+          <a href="#" onclick="toggleMenu(this)"><i class="bi bi-people-fill"></i> Gestion de Alumnos</a>
+          <div class="submenu">
+              <a href="{{ url_for('control_alumnos') }}"><i class="bi bi-person-circle"></i> Alumnos Matriculados</a>
+              <a href="{{ url_for('asistencias') }}"><i class="bi bi-calendar-check"></i> Asistencias de Alumnos </a>
+              <a href="{{ url_for('cumple_alumnos') }}"><i class="bi bi-balloon"></i> Control de Cumpleaños</a>
+          </div>
+
+          <a href="{{ url_for('generar_fotocheck') }}"><i class="bi bi-person-badge"></i> Generar Fotocheck</a>
+          <a href="{{ url_for('reporte_total') }}"><i class="bi bi-clipboard-data"></i> Reportes</a>
+
+          {% if rol|trim|lower == 'admin' %}
+          <a href="{{ url_for('administrar_usuarios') }}"><i class="bi bi-person-gear"></i> Usuarios</a>
+          {% endif %}
+
+          <div class="sidebar-qr-wrapper">
+            <div class="card shadow-sm border-0">
+              <div class="card-header bg-dark text-white text-center py-2">
+                <small class="mb-0">QR de acceso al sistema</small>
+              </div>
+              <div class="card-body text-center">
+                <img 
+                  src="{{ url_for('static', filename='qrcodes/servidor.png') }}?v={{ cache_buster }}"
+                  alt="QR servidor"
+                  class="img-fluid"
+                >
+                <small class="text-muted d-block mt-2 sidebar-qr-url">
+                  Enlazar Teléfono
+                </small>
+              </div>
+            </div>
+          </div>
+
+      </div> <!-- cierre .sidebar-main -->
+
+      <a href="{{ url_for('logout') }}" class="logout-link">
+          <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+      </a>
+
+    </div> <!-- cierre .sidebar -->
+
+    <!-- ===== CONTENIDO PRINCIPAL ===== -->
+    <div class="content mt-3 px-3">
+
+      <div class="text-center mb-4">
+        <h2 class="fw-bold text-primary" style="letter-spacing: 1px;">JGM - ICILT</h2>
+        <h5 class="text-muted">Estadísticas Generales</h5>
+        <hr style="width: 200px; margin: 1px auto; border-top: 2px solid #0d6efd;">
+      </div>
+
+      <!-- FILA 1: Cursos + Sedes -->
+      <div class="row justify-content-center">
+        <!-- 🟦 Gráfico de alumnos por curso -->
+        <div class="col-md-5 mb-4">
+          <div class="card shadow-sm border-0 card-chart">
+            <div class="card-header bg-primary text-white text-center">
+              <h6 class="mb-0">Distribución de Alumnos por Curso</h6>
+            </div>
+            <div class="card-body text-center">
+              <div class="chart-wrapper">
+                <canvas id="chartCursos"></canvas>
+              </div>
+              <div id="legendCursos" class="chart-legend mt-2"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 🟩 Gráfico por sede -->
+        <div class="col-md-5 mb-4">
+          <div class="card shadow-sm border-0 card-chart">
+            <div class="card-header bg-success text-white text-center">
+              {% if rol|trim|lower == 'admin' %}
+                <h6 class="mb-0">Distribución de Alumnos por Sede</h6>
+              {% else %}
+                <h6 class="mb-0">Distribución de Alumnos por mi(s) Sede(s)</h6>
+              {% endif %}
+            </div>
+            <div class="card-body text-center">
+              <div class="chart-wrapper">
+                <canvas id="chartSedes"></canvas>
+              </div>
+              <div id="legendSedes" class="chart-legend mt-2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILA 2: Institución -->
+      <div class="row justify-content-center">
+        <div class="col-md-6 mb-4">
+          <div class="card shadow-sm border-0">
+            <div class="card-header bg-warning text-dark text-center">
+              <h6 class="mb-0">Distribución de Alumnos por Institución</h6>
+            </div>
+            <div class="card-body text-center">
+              <div style="width: 260px; margin: auto;">
+                <canvas id="chartInstitucion"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div> <!-- cierre .content -->
+
+    <!-- Cargar Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script id="data-cursos" type="application/json">{{ resumen_cursos | tojson }}</script>
+    <script id="data-sedes" type="application/json">{{ resumen_sedes | tojson }}</script>
+    <script id="data-institucion" type="application/json">{{ resumen_institucion | tojson }}</script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const cursos      = JSON.parse(document.getElementById("data-cursos").textContent || "[]");
+      const sedes       = JSON.parse(document.getElementById("data-sedes").textContent || "[]");
+      const institucion = JSON.parse(document.getElementById("data-institucion").textContent || "[]");
+
+      // === Gráfico de cursos (con leyenda HTML) ===
+      const canvasCursos = document.getElementById("chartCursos");
+      if (cursos.length && canvasCursos) {
+        const baseColors = ["#007bff", "#28a745", "#ffc107", "#dc3545", "#20c997", "#6f42c1"];
+        const colorsCursos = cursos.map((_, idx) => baseColors[idx % baseColors.length]);
+
+        new Chart(canvasCursos, {
+          type: "pie",
+          data: {
+            labels: cursos.map(c => c.curso),
+            datasets: [{
+              data: cursos.map(c => c.cantidad),
+              backgroundColor: colorsCursos
+            }]
+          },
+          options: {
+            maintainAspectRatio: false,
+            radius: 80,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(ctx) {
+                    const label = ctx.label || "";
+                    const value = ctx.parsed || 0;
+                    return `${label}: ${value}`;
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        const legendCursos = document.getElementById("legendCursos");
+        legendCursos.innerHTML = cursos.map((c, idx) => `
+          <div class="chart-legend-item">
+            <span class="chart-legend-color" style="background-color:${colorsCursos[idx]}"></span>
+            <span>${c.curso}</span>
+          </div>
+        `).join("");
+      }
+
+      // === Gráfico por sede (con leyenda HTML, mismo contenedor) ===
+      const canvasSedes = document.getElementById("chartSedes");
+      if (sedes.length && canvasSedes) {
+        const baseSedeColors = ["#6610f2", "#20c997", "#fd7e14", "#17a2b8", "#0d6efd", "#6c757d"];
+        const colorsSedes = sedes.map((_, idx) => baseSedeColors[idx % baseSedeColors.length]);
+
+        new Chart(canvasSedes, {
+          type: "doughnut",
+          data: {
+            labels: sedes.map(s => s.sede),
+            datasets: [{
+              data: sedes.map(s => s.cantidad),
+              backgroundColor: colorsSedes
+            }]
+          },
+          options: { 
+            maintainAspectRatio: false,
+            radius: 80,
+            cutout: "60%",
+            plugins: { 
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(ctx) {
+                    const label = ctx.label || "";
+                    const value = ctx.parsed || 0;
+                    return `${label}: ${value}`;
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        const legendSedes = document.getElementById("legendSedes");
+        legendSedes.innerHTML = sedes.map((s, idx) => `
+          <div class="chart-legend-item">
+            <span class="chart-legend-color" style="background-color:${colorsSedes[idx]}"></span>
+            <span>${s.sede}</span>
+          </div>
+        `).join("");
+      } else if (canvasSedes) {
+        canvasSedes.parentElement.innerHTML =
+          '<p class="text-muted mb-0">No hay matrículas registradas para la(s) sede(s) asignada(s).</p>';
+      }
+
+      // === Gráfico instituciones ===
+      const canvasInst = document.getElementById("chartInstitucion");
+      if (institucion.length && canvasInst) {
+        new Chart(canvasInst, {
+          type: "bar",
+          data: {
+            labels: institucion.map(i => i.institucion),
+            datasets: [{
+              label: "Cantidad de alumnos",
+              data: institucion.map(i => i.cantidad),
+              backgroundColor: "#ffc107"
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+      }
+    });
+    </script>
+
+    <script>
+        function toggleMenu(element) {
+            element.classList.toggle("active");
+        }
+    </script>
+
+    <script>
+        // Bucle eterno anti-regresar
+        window.onload = function () {
+            setTimeout(function () {
+                history.pushState(null, "", location.href);
+            }, 0);
+        };
+
+        window.onpopstate = function () {
+            history.pushState(null, "", location.href);
+        };
+    </script>
+
+    <script>
+        history.replaceState(null, "", location.href);
+        window.onpopstate = function() {
+            history.go(1);
+        };
+    </script>
+</body>
+</html>

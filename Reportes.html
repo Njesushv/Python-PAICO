@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <meta charset="UTF-8">
+    <title>Gestión de Alumnos - JGM Consultores</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+        }
+
+        .contenedor-grande {
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        .card {
+            border-radius: 20px;
+            overflow: hidden;
+            animation: fadeIn .35s ease;
+        }
+
+        .card-header {
+            background-color: #1d3557;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .btn {
+            border-radius: 20px;
+            font-weight: 500;
+            padding: 4px 10px !important;
+            font-size: 12px !important;
+        }
+
+        .top-btn {
+            padding: 8px 14px !important;
+            font-size: 14px !important;
+        }
+
+        .resumen-card {
+            border-radius: 14px;
+            padding: 12px 14px;
+            background: #ffffff;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+            border-left: 5px solid #1d3557;
+        }
+
+        .resumen-card h6 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: #6c757d;
+            margin-bottom: 2px;
+        }
+
+        .resumen-card .valor {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1d3557;
+        }
+
+        table th, table td {
+            text-align: center !important;
+            vertical-align: middle !important;
+            padding: 6px 10px !important;
+            font-size: 13px;
+            line-height: 1.2;
+        }
+
+        table thead th {
+            background-color: #1d3557;
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        tr:hover {
+            background-color: #f1f3f5;
+        }
+
+        .seccion-titulo {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1d3557;
+            margin-top: 10px;
+            margin-bottom: 6px;
+        }
+
+        .badge-estado {
+            font-size: 0.75rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container contenedor-grande mt-4">
+    <div class="card shadow">
+
+        <!-- HEADER -->
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-graph-up-arrow"></i> Reportes y Estadísticas de Matrículas
+            </h5>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-light top-btn">
+                <i class="bi bi-arrow-left-circle"></i> Volver
+            </a>
+        </div>
+
+        <!-- BODY -->
+        <div class="card-body">
+
+            <!-- RESUMEN SUPERIOR -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <div class="resumen-card">
+                        <h6><i class="bi bi-people-fill"></i> Total Matriculados</h6>
+                        <div class="valor">{{ total_matriculas }}</div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="resumen-card">
+                        <h6><i class="bi bi-exclamation-triangle-fill"></i> Total Morosos</h6>
+                        <div class="valor">{{ morosos_detalle|length }}</div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="resumen-card">
+                        <h6><i class="bi bi-building"></i> Cursos con Morosos</h6>
+                        <div class="valor">{{ morosos_por_curso|length }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MATRÍCULAS POR CURSO / MOROSOS POR CURSO -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                <div class="d-flex justify-content-between align-items-center seccion-titulo">
+                    <div>
+                        <i class="bi bi-journal-text"></i> Matrículas por Curso
+                    </div>
+                    <a href="{{ url_for('exportar_reporte_matriculados') }}"
+                    class="btn btn-success btn-sm">
+                        <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                    </a>
+                </div>
+
+
+                        <!-- 👇 Gráfico de torta -->
+                    <div class="mb-2" style="height: 260px;">
+                        <canvas id="chartMatriculasCurso"></canvas>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Curso</th>
+                                    <th>Total Matriculados</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fila in matriculas_por_curso %}
+                                <tr>
+                                    <td>{{ fila.curso }}</td>
+                                    <td>{{ fila.total }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="2" class="text-muted">Sin datos.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+<div class="col-md-6">
+    <div class="seccion-titulo">
+        <i class="bi bi-exclamation-octagon-fill"></i> Morosos por Curso
+    </div>
+
+    <!-- 👇 Gráfico de torta -->
+    <div class="mb-2" style="height: 260px;">
+        <canvas id="chartMorososCurso"></canvas>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered mb-0">
+            <thead>
+                <tr>
+                    <th>Curso</th>
+                    <th>Total Morosos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fila in morosos_por_curso %}
+                <tr>
+                    <td>{{ fila.curso }}</td>
+                    <td>{{ fila.total_morosos }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="2" class="text-muted">No hay morosos registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+            <!-- ALUMNOS POR SEDE / MOROSOS POR SEDE -->
+            <div class="row g-3 mb-3">
+                <!-- ALUMNOS POR SEDE -->
+                <div class="col-md-6">
+                    <div class="seccion-titulo">
+                        <i class="bi bi-person-badge-fill"></i> Alumnos por Sede
+                    </div>
+
+                         <div class="mb-2" style="height: 260px;">
+            <canvas id="chartAlumnosSede"></canvas>
+        </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Sede</th>
+                                    <th>Total Alumnos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fila in alumnos_por_sede %}
+                                <tr>
+                                    <td>{{ fila.sede }}</td>
+                                    <td>{{ fila.total_alumnos }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="2" class="text-muted">Sin alumnos registrados.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- MOROSOS POR SEDE -->
+                <div class="col-md-6">
+                    <div class="seccion-titulo">
+                        <i class="bi bi-geo-alt-fill"></i> Morosos por Sede
+                    </div>
+
+                    <div class="mb-2" style="height: 260px;">
+                            <canvas id="chartMorososSede"></canvas>
+                        </div>
+
+
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Sede</th>
+                                    <th>Total Morosos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fila in morosos_por_sede %}
+                                <tr>
+                                    <td>{{ fila.sede }}</td>
+                                    <td>{{ fila.total_morosos }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="2" class="text-muted">No hay morosos por sede.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- DETALLE DE MOROSOS -->
+            <div class="row g-3">
+                <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center seccion-titulo">
+                    <div>
+                        <i class="bi bi-list-ul"></i> Detalle de Morosos
+                    </div>
+                    <a href="{{ url_for('exportar_alumnos_morosos') }}"
+                    class="btn btn-success btn-sm">
+                        <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                    </a>
+                </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Alumno</th>
+                                    <th>Celular</th>
+                                    <th>Curso</th>
+                                    <th>Sede</th>
+                                    <th>Monto Matrícula (S/)</th>
+                                    <th>Saldo Matrícula (S/)</th>
+                                    <th>Deuda (S/)</th>
+                                    
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for m in morosos_detalle %}
+                                <tr>
+                                    <td>{{ m.alumno }}</td>
+                                    <td>{{ m.celular }}</td>
+                                    <td>{{ m.curso }}</td>
+                                    <td>{{ m.sede }}</td>
+                                    <td>{{ "%.2f"|format((m.monto_matricula   or 0)|float) }}</td>
+                                    <td>{{ "%.2f"|format((m.saldo_matricula  or 0)|float) }}</td>
+                                    <td>{{ "%.2f"|format((m.deuda           or 0)|float) }}</td>
+                   
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-muted text-center">
+                                        No hay alumnos morosos en este momento.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- card-body -->
+    </div> <!-- card -->
+</div> <!-- container -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<script>
+    // Datos que vienen de Flask/Jinja (en JSON “seguro”)
+    const matriculasPorCurso = JSON.parse('{{ matriculas_por_curso | tojson | safe }}');
+    const morososPorCurso    = JSON.parse('{{ morosos_por_curso   | tojson | safe }}');
+    const alumnosPorSede     = JSON.parse('{{ alumnos_por_sede    | tojson | safe }}');
+    const morososPorSede     = JSON.parse('{{ morosos_por_sede    | tojson | safe }}');
+
+    function crearTorta(idCanvas, labels, valores) {
+        const ctx = document.getElementById(idCanvas);
+        if (!ctx) return;
+        if (!valores || valores.length === 0) return;
+
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: valores
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    // Matrículas por curso
+    crearTorta(
+        'chartMatriculasCurso',
+        matriculasPorCurso.map(x => x.curso),
+        matriculasPorCurso.map(x => x.total)
+    );
+
+    // Morosos por curso
+    crearTorta(
+        'chartMorososCurso',
+        morososPorCurso.map(x => x.curso),
+        morososPorCurso.map(x => x.total_morosos)
+    );
+
+    // Alumnos por sede
+    crearTorta(
+        'chartAlumnosSede',
+        alumnosPorSede.map(x => x.sede),
+        alumnosPorSede.map(x => x.total_alumnos)
+    );
+
+    // Morosos por sede
+    crearTorta(
+        'chartMorososSede',
+        morososPorSede.map(x => x.sede),
+        morososPorSede.map(x => x.total_morosos)
+    );
+</script>
+
+
+</body>
+
+
+</html>

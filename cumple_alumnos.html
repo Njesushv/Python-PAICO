@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>🎉 Cumpleaños de Alumnos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            min-height: 100vh;
+            font-family: "Segoe UI", sans-serif;
+            padding: 20px;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .titulo {
+            color: #0d47a1;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .emoji {
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Volver</a>
+    <h3 class="text-center titulo">🎂 Cumpleaños de Alumnos</h3>
+
+    {% if cumple_hoy %}
+    <div class="alert alert-success text-center">
+        <strong>🎉 Hoy cumplen años:</strong>
+    </div>
+    <div class="row">
+        {% for a in cumple_hoy %}
+        <div class="col-md-4 mb-3">
+            <div class="card p-3 text-center border-success">
+                <h5 class="mb-1">{{ a.nombres }}</h5>
+                <p class="text-muted mb-1"><strong>📅 Nacimiento:</strong> {{ a.fecha_nacimiento }}</p>
+                <p class="text-muted"><strong>📞 Celular:</strong> {{ a.celular or '—' }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">🎈 No hay cumpleaños hoy.</div>
+    {% endif %}
+
+    {% if proximos %}
+    <hr>
+    <div class="alert alert-warning text-center">
+        <strong>🎁 Próximos cumpleaños (7 días):</strong>
+    </div>
+    <div class="row">
+        {% for a in proximos %}
+        <div class="col-md-4 mb-3">
+            <div class="card p-3 text-center border-warning">
+                
+                <h5 class="mb-1">{{ a.nombres }}</h5>
+                
+                <p class="text-muted mb-1"><strong>📅 Nacimiento:</strong> {{ a.fecha_nacimiento }}</p>
+                <p class="text-muted"><strong>📞 Celular:</strong> {{ a.celular or '—' }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Docente</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: "Segoe UI", sans-serif;
+        }
+        .container {
+            margin-top: 40px;
+            max-width: 900px;
+        }
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #1d3557;
+            color: white;
+            font-weight: 600;
+        }
+        .btn {
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        .form-label.required::after {
+            content: " *";
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card shadow">
+        <div class="card-header text-center">
+            <h5 class="mb-0">✏️ Editar Docente</h5>
+        </div>
+
+        <div class="card-body">
+           <form method="POST">
+    <!-- FILA 1: Nombres + DNI -->
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <label class="form-label required">Nombres</label>
+            <input type="text" name="nombres" class="form-control"
+                   value="{{ docente['nombres'] }}" required>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">DNI</label>
+            <input type="text" name="dni" class="form-control"
+                   value="{{ docente['dni'] }}">
+        </div>
+    </div>
+
+    <!-- FILA 2: Celular + Correo -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Celular</label>
+            <input type="text" name="celular" class="form-control"
+                   value="{{ docente['celular'] }}">
+        </div>
+        <div class="col-md-8">
+            <label class="form-label">Correo</label>
+            <input type="email" name="correo" class="form-control"
+                   value="{{ docente['correo'] }}">
+        </div>
+    </div>
+
+    <!-- FILA 3: Especialidad + Profesión -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Especialidad</label>
+            <input type="text" name="especialidad" class="form-control"
+                   value="{{ docente['especialidad'] }}">
+        </div>
+        <div class="col-md-6">
+            <label for="profesion" class="form-label">Profesión</label>
+            <input type="text" name="profesion" id="profesion"
+                   class="form-control" value="{{ docente['profesion'] }}">
+        </div>
+    </div>
+
+    <!-- FILA 4: Curso asignado + Sede -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Curso asignado</label>
+            <select class="form-select" name="id_curso" id="id_curso">
+                <option value="">-- Sin curso asignado --</option>
+                {% for c in cursos %}
+                    <option value="{{ c.id_curso }}"
+                            data-sede="{{ c.id_sede }}"
+                            {% if id_curso_actual and c.id_curso == id_curso_actual %}selected{% endif %}>
+                        {{ c.nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label required">Sede</label>
+            <select class="form-select" name="id_sede" id="id_sede" required>
+                <option value="">-- Selecciona una sede --</option>
+                {% for s in sedes %}
+                    <option value="{{ s.id_sede }}"
+                            {% if id_sede_actual and s.id_sede == id_sede_actual %}selected{% endif %}>
+                        {{ s.nombre_sede }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- FILA 5: Horario asignado -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <label class="form-label">Horario asignado</label>
+            <select class="form-select" name="id_horario" required>
+                {% for h in horarios %}
+                    <option value="{{ h.id_horario }}"
+                        {% if asignacion and asignacion['id_horario'] == h.id_horario %}selected{% endif %}>
+                        {{ h.nombre_horario }} ({{ h.hora_inicio }} - {{ h.hora_fin }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+
+
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-success">Guardar cambios</button>
+                    <a href="{{ url_for('administrar_docentes') }}" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+const sedeSelect  = document.getElementById("id_sede");
+const cursoSelect = document.getElementById("id_curso");
+
+function filtrarCursosPorSede() {
+    const sedeId   = sedeSelect.value;
+    const opciones = cursoSelect.querySelectorAll("option[data-sede]");
+
+    opciones.forEach(opt => {
+        if (!sedeId) {
+            opt.hidden = false;
+        } else {
+            opt.hidden = (opt.dataset.sede !== sedeId);
+        }
+    });
+
+    const sel = cursoSelect.selectedOptions[0];
+    if (sel && sel.hidden) {
+        cursoSelect.value = "";
+    }
+}
+
+if (sedeSelect && cursoSelect) {
+    sedeSelect.addEventListener("change", filtrarCursosPorSede);
+
+    cursoSelect.addEventListener("change", () => {
+        const opt = cursoSelect.selectedOptions[0];
+        if (!opt) return;
+        const sedeId = opt.dataset.sede;
+        if (sedeId && sedeSelect.value !== sedeId) {
+            sedeSelect.value = sedeId;
+            filtrarCursosPorSede();
+        }
+    });
+
+    document.addEventListener("DOMContentLoaded", filtrarCursosPorSede);
+}
+</script>
+
+</body>
+</html>

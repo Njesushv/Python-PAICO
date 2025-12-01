@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>📋 Asistencias Docentes - {{ fecha }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #edf2f7, #e2e8f0);
+      font-family: "Segoe UI", sans-serif;
+      padding: 40px;
+    }
+    .main-container {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+      padding: 30px;
+      max-width: 1700px;  
+      margin: auto;
+      transition: 0.3s;
+    }
+    .main-container:hover {
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+    h2 {
+      color: #1d3557;
+      font-weight: 700;
+    }
+    .btn {
+      border-radius: 8px;
+      transition: all 0.2s ease-in-out;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+    }
+    table {
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    thead {
+      background-color: #1d3557;
+      color: #fff;
+    }
+    .table-striped > tbody > tr:nth-of-type(odd) > * {
+      background-color: #f1f5fa;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="main-container">
+    <div class="top-bar">
+      <h2><i class="bi bi-clipboard-check"></i> Asistencias Docentes del {{ fecha }}</h2>
+      <div class="d-flex gap-2"></div>
+    </div>
+
+    <!-- FORM FILTRO -->
+<form method="GET" action="{{ url_for('asistencias_docentes') }}">
+  <div class="row g-3">
+    <div class="col-md-3">
+      <label class="form-label">Desde:</label>
+      <input type="date"
+             name="fecha_desde"
+             class="form-control"
+             value="{{ fecha_desde }}">
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Hasta:</label>
+      <input type="date"
+             name="fecha_hasta"
+             class="form-control"
+             value="{{ fecha_hasta }}">
+    </div>
+
+        <!-- Docente -->
+        <div class="col-md-3">
+          <label for="buscar_docente" class="form-label">Docente:</label>
+          <input type="text" class="form-control" id="buscar_docente" name="buscar_docente"
+                 placeholder="Nombre o DNI"
+                 value="{{ buscar_docente or '' }}">
+        </div>
+
+      </div>
+
+      <!-- BOTONES -->
+      <div class="mt-3 d-flex justify-content-end gap-2">
+
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="bi bi-search"></i> Buscar
+        </button>
+
+        <a href="{{ url_for('asistencias_docentes') }}"
+           class="btn btn-secondary btn-sm">
+          Ver todo
+        </a>
+
+        <a href="{{ url_for('exportar_asistencias_docentes',
+            fecha_desde=fecha_desde,
+            fecha_hasta=fecha_hasta,
+            buscar_docente=buscar_docente) }}"
+           class="btn btn-success btn-sm">
+          <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+        </a>
+
+        <a href="{{ url_for('dashboard') }}" class="btn btn-dark btn-sm">
+          <i class="bi bi-arrow-left-circle"></i> Volver
+        </a>
+
+      </div>
+
+    </form>
+
+    <!-- TABLA -->
+    <div class="table-responsive shadow-sm">
+      <table class="table table-striped align-middle text-center">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Código</th> <!-- 👈 nuevo -->
+        <th>DNI</th>     
+        <th>Docente</th>
+        <th>Sede</th>
+        <th>Curso</th>       <!-- 👈 nuevo -->
+        <th>Horario</th>     <!-- 👈 nuevo -->
+        <th>Hora</th>
+        <th>Observación</th>
+      </tr>
+    </thead>
+
+
+
+
+
+        <tbody>
+          {% if asistencias %}
+            {% for r in asistencias %}
+              <tr>
+                <td>{{ r.fecha or '-' }}</td>
+                <td>{{ r.codigo or '-' }}</td>   
+                <td>{{ r.dni or '-' }}</td>
+                <td class="text-start">{{ r.nombres or '-' }}</td>
+                <td>{{ r.sede or "Sin sede" }}</td>
+                <td>{{ r.curso or 'Sin curso' }}</td>  <!-- 👈 curso -->
+                <td>{{ r.horario or 'Sin horario' }}</td> <!-- 👈 horario -->
+                
+
+                <td>{{ r.hora or '-' }}</td>
+                <td>{{ r.observacion or '-' }}</td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="6" class="text-center py-4">
+                🕓 No hay asistencias registradas.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </div>
+</body>
+</html>

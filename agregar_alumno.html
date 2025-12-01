@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Matricular Un Nuevo Alumno</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: "Segoe UI", sans-serif;
+            margin: 0;
+        }
+
+        .contenedor-grande {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        /* CARD / CONTENIDO */
+        .card {
+            border-radius: 20px;
+            overflow: hidden;
+            animation: fadeIn .35s ease;
+        }
+
+        .card-header {
+            background-color: #1d3557;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .btn {
+            border-radius: 20px;
+            font-weight: 500;
+            padding: 6px 14px !important;
+            font-size: 13px !important;
+        }
+
+        .btn-primary {
+            background-color: #1d3557;
+            border-color: #1d3557;
+        }
+
+        .btn-primary:hover {
+            background-color: #12263f;
+            border-color: #12263f;
+        }
+
+        .form-label.required::after {
+            content: " *";
+            color: #d00;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 12px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #457b9d;
+            box-shadow: 0 0 0 0.15rem rgba(69,123,157,0.25);
+        }
+
+        .input-group-text {
+            background-color: #f8f9fa;
+            border-right: none;
+        }
+
+        .small-muted {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .top-btn {
+            padding: 8px 14px !important;
+            font-size: 14px !important;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .autocomplete-wrapper {
+            position: relative;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container contenedor-grande mt-4">
+    <div class="card shadow">
+
+        <!-- HEADER -->
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-person-plus-fill"></i> Matricular Un Nuevo Alumno
+            </h5>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-light top-btn">
+                <i class="bi bi-arrow-left-circle"></i> Volver
+            </a>
+        </div>
+
+        <!-- BODY -->
+        <div class="card-body">
+
+            <!-- Mensajes flash -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category else 'info' }} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <!-- Formulario principal -->
+            <form method="POST"
+                  action="{{ url_for('agregar') }}"
+                  class="row g-3 needs-validation"
+                  novalidate
+                  onsubmit="return validarYConfirmar(event)">
+
+                <div class="col-md-6">
+                    <label class="form-label required">Nombres</label>
+                    <input type="text" name="nombres" class="form-control" required maxlength="100" autofocus>
+                    <div class="invalid-feedback">Por favor ingresa los nombres.</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label required">Apellidos</label>
+                    <input type="text" name="apellidos" class="form-control" required maxlength="100">
+                    <div class="invalid-feedback">Por favor ingresa los apellidos.</div>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label required">DNI</label>
+                    <input type="text" name="dni" class="form-control"
+                           required pattern="\d{6,12}" maxlength="12"
+                           inputmode="numeric" placeholder="Solo números">
+                    <div class="form-text small-muted">Solo números (8–12 dígitos).</div>
+                    <div class="invalid-feedback">DNI inválido.</div>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Fecha de Nacimiento</label>
+                    <input type="date" name="fecha_nacimiento" class="form-control"
+                           max="{{ (now().date() if now is defined else '') }}">
+                </div>
+
+                <div class="col-md-4">
+                    <label for="grado_academico" class="form-label required">Grado Académico</label>
+                    <select name="grado_academico" id="grado_academico" class="form-select" required>
+                        <option value="">-- Seleccione --</option>
+                        <option value="Sin Secundaria">Sin Secundaria</option>
+                        <option value="Secundaria Completa">Secundaria Completa</option>
+                        <option value="Técnico Completo">Técnico Completo</option>
+                        <option value="Técnico Incompleto">Técnico Incompleto</option>
+                        <option value="Universitario Completo">Universitario Completo</option>
+                        <option value="Universitario Incompleto">Universitario Incompleto</option>
+                    </select>
+                    <div class="invalid-feedback">Debes seleccionar un grado académico.</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Celular</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-phone"></i></span>
+                        <input type="tel" name="celular" class="form-control"
+                               maxlength="20" inputmode="tel" placeholder="Ej. 987654321">
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Correo</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input type="email" name="correo" class="form-control"
+                               maxlength="150" placeholder="ejemplo@dominio.com">
+                    </div>
+                </div>
+
+
+<div class="col-md-8">
+    <label class="form-label required">Curso</label>
+    <select name="id_curso" id="id_curso" class="form-select" required>
+        <option value="0">-- Selecciona un curso --</option>
+        {% for curso in cursos %}
+            <option value="{{ curso.id_curso }}"
+                    data-sede="{{ curso.id_sede }}"
+                    data-horario="{{ curso.horario_texto|default('') }}"
+                    data-dias="{{ curso.dias|default('') }}">
+                {{ curso.nombre }} - HORARIO: {{ curso.horario_texto }}
+            </option>
+        {% endfor %}
+    </select>
+    <div class="invalid-feedback">Debes seleccionar un curso.</div>
+</div>
+
+
+
+<div class="col-md-3">
+    <label class="form-label required">Sede</label>
+    <select name="id_sede" id="id_sede" class="form-select" required>
+        <option value="">-- Selecciona una sede --</option>
+        {% for sede in sedes %}
+            <option value="{{ sede.id_sede }}">
+                {{ sede.nombre_sede }}
+            </option>
+        {% endfor %}
+    </select>
+    <div class="invalid-feedback">Debes seleccionar una sede.</div>
+</div>
+
+             <div class="col-md-3">
+                    <label class="form-label">Aula</label>
+                    <input type="text"
+                        name="aula"
+                        class="form-control"
+                        maxlength="50"
+                        placeholder="Ej. A-201">
+                </div>
+
+
+
+
+                <div class="col-md-2">
+                    <label class="form-label required">Institución</label>
+                    <select name="institucion" class="form-select" required>
+                        <option value="" selected disabled>-- Selecciona una institución --</option>
+                        <option value="ICILT">ICILT</option>
+                        <option value="JGM">JGM</option>
+                    </select>
+                    <div class="invalid-feedback">Debes seleccionar una institución.</div>
+                </div>
+
+
+
+              <div class="col-md-3">
+    <label class="form-label required">Monto de Matrícula</label>
+    <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-cash-coin"></i></span>
+        <input type="number" step="0.01" min="0" name="monto"
+               class="form-control" required placeholder="Ej. 50.00">
+    </div>
+    <div class="invalid-feedback">Ingresa un monto válido.</div>
+</div>
+
+<div class="col-md-3">
+    <label class="form-label required">Mensualidad (S/)</label>
+    <div class="input-group">
+        <input type="number" step="0.01" min="0" name="mensualidad"
+               class="form-control" required placeholder="Ej. 150.00">
+    </div>
+    <div class="invalid-feedback">Ingresa el monto de la mensualidad.</div>
+</div>
+
+<div class="col-md-3">
+    <label class="form-label required">Saldo de Matrícula</label>
+    <div class="input-group">
+        <input type="number" step="0.01" min="0" name="saldo_matricula"
+               class="form-control" required placeholder="Ej. 0.00">
+    </div>
+    <div class="invalid-feedback">Ingresa el saldo de matrícula.</div>
+</div>
+
+<div class="col-md-2">
+    <label class="form-label required">Tipo de Pago</label>
+    <select name="tipo_pago" class="form-select" required>
+        <option value="" disabled selected>-- Selecciona el tipo de pago --</option>
+        <option value="SIN INICIAL">Sin Inicial</option>
+        <option value="PARCIAL">Parcial</option>
+        <option value="TOTAL">Total</option>
+        <option value="BECADO">Becado</option>
+       
+    
+    </select>
+    <div class="invalid-feedback">Debes seleccionar un tipo de pago.</div>
+</div>
+
+
+
+<div class="col-md-3">
+    <label class="form-label required">Método de Pago</label>
+    <select name="metodo_pago" class="form-select" required>
+        <option value="" disabled selected>-- Selecciona el método de pago --</option>
+        <option value="EFECTIVO">EFECTIVO</option>
+        <option value="BBVA">BBVA</option>
+        <option value="BANCO DE LA NACION">BANCO DE LA NACION</option>
+        <option value="BCP">BCP</option>
+        <option value="SCOTIABANK">SCOTIABANK</option>
+        <option value="INTERBANK">INTERBANK</option>
+        <option value="YAPE">YAPE</option>
+        <option value="PLIN">PLIN</option>
+    </select>
+    <div class="invalid-feedback">Debes seleccionar un método de pago.</div>
+</div>
+
+
+
+                <div class="col-md-3">
+                    <label class="form-label">Fecha de Vencimiento de Mensualidad</label>
+                    <input type="date" name="fecha_vencimiento" class="form-control"
+                           max="{{ (now().date() if now is defined else '') }}">
+                </div>
+
+
+
+
+
+
+
+
+
+
+                <div class="col-md-12">
+                    <label class="form-label">Observación</label>
+                    <textarea name="observacion" class="form-control" rows="3"
+                              placeholder="Escribe alguna observación..."></textarea>
+                </div>
+
+
+
+
+
+
+
+
+
+
+
+                <div class="col-12 d-flex justify-content-between mt-4">
+                    <div class="btn-group">
+  
+                        <button type="submit" class="btn btn-primary shadow-sm">
+                            <i class="bi bi-check-circle"></i> Guardar Alumno
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+
+            <!-- Previsualización -->
+            <div id="previewCard" class="card mt-4 d-none shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-person-vcard"></i> Previsualización
+                    </h5>
+                    <p id="previewContent" class="card-text small-muted"></p>
+                </div>
+            </div>
+
+            <!-- Toasts -->
+            <div id="toastExito"
+                 style="display:none;
+                        position: fixed;
+                        top: 20px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        background: #38a169;
+                        color: white;
+                        padding: 12px 24px;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+                        z-index: 1050;">
+                ✅ Alumno guardado exitosamente
+            </div>
+
+            <div id="toastError"
+                 style="display:none;
+                        position: fixed;
+                        top: 20px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        background: #e63946;
+                        color: white;
+                        padding: 12px 24px;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+                        z-index: 1050;">
+                ⚠️ El número de DNI ya está registrado
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- JS Bootstrap -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Validación Bootstrap -->
+<script>
+(function () {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+                form.classList.add('was-validated');
+            }
+        }, false);
+    });
+})();
+</script>
+
+<script>
+function validarYConfirmar(e) {
+    const form = e.target;
+    if (!form.checkValidity()) return false;
+
+    const idCurso = form.querySelector('[name="id_curso"]').value;
+    if (!idCurso || idCurso === "0") {
+        alert("Por favor selecciona un curso válido.");
+        return false;
+    }
+
+    const dni = form.querySelector('[name="dni"]').value.trim();
+    if (!/^\d{6,12}$/.test(dni)) {
+        alert("DNI inválido. Debe contener solo números (6–12 dígitos).");
+        return false;
+    }
+
+    return true;
+}
+
+function mostrarPrevisualizacion() {
+    const form = document.querySelector('form');
+    const data = new FormData(form);
+    const nombre = (data.get('nombres') || '').trim();
+    const apellidos = (data.get('apellidos') || '').trim();
+    const dni = (data.get('dni') || '').trim();
+    const curso = data.get('id_curso') || '';
+    const celular = data.get('celular') || '';
+    const correo = data.get('correo') || '';
+    const institucion = data.get('institucion') || '';
+
+    const preview = `
+        <strong>Nombre:</strong> ${nombre} ${apellidos}<br>
+        <strong>DNI:</strong> ${dni}<br>
+        <strong>Curso (ID):</strong> ${curso}<br>
+        <strong>Institución:</strong> ${institucion}<br>
+        <strong>Celular:</strong> ${celular}<br>
+        <strong>Correo:</strong> ${correo}
+    `;
+    document.getElementById('previewContent').innerHTML = preview;
+    const card = document.getElementById('previewCard');
+    card.classList.remove('d-none');
+    card.scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+
+<!-- Sincronizar sede / curso -->
+<script>
+const sedeSelect  = document.getElementById("id_sede");
+const cursoSelect = document.getElementById("id_curso");
+
+if (sedeSelect && cursoSelect) {
+    // Cuando cambio SEDE → solo muestro cursos de esa sede
+    sedeSelect.addEventListener("change", function () {
+        const sede = this.value;
+        if (!sede) return;
+
+        fetch(`/api/cursos_por_sede?id_sede=${sede}`)
+            .then(res => res.json())
+            .then(data => {
+                cursoSelect.innerHTML = "";
+
+                if (!data.length) {
+                    cursoSelect.innerHTML =
+                        `<option value="0">No hay cursos en esta sede</option>`;
+                    return;
+                }
+
+                cursoSelect.innerHTML =
+                    `<option value="0" selected>-- Selecciona un curso --</option>`;
+
+                data.forEach(c => {
+                    const opt = document.createElement("option");
+                    opt.value = c.id_curso;
+                    opt.textContent = c.nombre;
+                    opt.dataset.sede = sede; // todos estos cursos son de esa sede
+                    cursoSelect.appendChild(opt);
+                });
+            });
+    });
+
+    // Cuando cambio CURSO → autocompleto SEDE
+    cursoSelect.addEventListener("change", function () {
+        const opt = this.options[this.selectedIndex];
+        if (!opt) return;
+
+        const sedeId = opt.dataset.sede;
+        if (sedeId && sedeSelect.value !== sedeId) {
+            sedeSelect.value = sedeId;
+        }
+    });
+}
+</script>
+
+<!-- Toasts de éxito / error -->
+<script>
+const params = new URLSearchParams(window.location.search);
+
+// Éxito
+if (params.get('exito') === '1') {
+    const toast = document.getElementById('toastExito');
+    toast.style.display = 'block';
+    toast.style.opacity = '1';
+    setTimeout(() => {
+        toast.style.transition = 'opacity 0.6s';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.style.display = 'none', 600);
+    }, 3000);
+}
+
+// Error DNI
+if (params.get('error') === 'dni') {
+    const toast = document.getElementById('toastError');
+    toast.style.display = 'block';
+    toast.style.opacity = '1';
+    setTimeout(() => {
+        toast.style.transition = 'opacity 0.6s';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.style.display = 'none', 600);
+    }, 600);
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de Alumnos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+</head>
+<body class="p-4">
+
+<a href="{{ url_for('dashboard') }}" class="btn btn-secondary mb-3">
+    ⬅ Volver
+</a>
+
+<h2 class="text-center mb-4">📚 Historial de Cambios de Estado</h2>
+
+<table class="table table-bordered table-hover text-center align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>#</th>
+            <th>ID Alumno</th>
+            <th>Código</th>
+            <th>Nombres</th>
+            <th>Celular</th>
+            <th>Correo</th>
+            <th>Curso</th>
+       
+            <th>Estado Anterior</th>
+            <th>Estado Nuevo</th>
+            <th>Fecha</th>
+        
+        </tr>
+    </thead>
+    <tbody>
+        {% for h in historial %}
+        <tr>
+            <td>{{ h.id_historial or ''  }}</td>
+            <td>{{ h.id_alumno  or '' }}</td>
+            <td>{{ h.codigo or ''  }}</td>
+            <td>{{ h.nombres or ''  }}</td>
+            <td>{{ h.celular or ''  }}</td>
+            <td>{{ h.correo or ''  }}</td>
+            <td>{{ h.curso or ''  }}</td>
+            
+
+            <td>{{ h.estado_anterior or ''  }}</td>
+
+
+
+
+
+            <td>
+                {% if h.estado_nuevo == 'Matriculado' %}
+                    <span class="badge bg-success">Matriculado</span>
+                {% elif h.estado_nuevo == 'Inactivo' %}
+                    <span class="badge bg-secondary">Inactivo</span>
+                {% elif h.estado_nuevo == 'Desertor' %}
+                    <span class="badge bg-danger">Desertor</span>
+                {% else %}
+                    <span class="badge bg-dark">{{ h.estado_nuevo }}</span>
+                {% endif %}
+            </td>
+
+            <td>{{ h.fecha_accion }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if historial|length == 0 %}
+<p class="text-center text-muted">No existen registros todavía.</p>
+{% endif %}
+
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registrar Pago</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: "Segoe UI", sans-serif;
+            margin: 0;
+        }
+
+        .contenedor-grande {
+            max-width: 1700px;
+            margin: auto;
+        }
+
+        /* CARD / CONTENIDO */
+        .card {
+            border-radius: 20px;
+            overflow: hidden;
+            animation: fadeIn .35s ease;
+        }
+        .card-header {
+            background-color: #1d3557;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 4px 10px !important;
+            font-size: 12px !important;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background-color: #1d3557;
+            border-color: #1d3557;
+        }
+        .btn-primary:hover {
+            background-color: #12263f;
+            border-color: #12263f;
+        }
+        .top-btn {
+            padding: 8px 14px !important;
+            font-size: 14px !important;
+        }
+
+        .form-label.required::after {
+            content: " *";
+            color: red;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 12px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            box-shadow: 0 0 0 0.15rem rgba(29,53,87,.25);
+        }
+
+        .autocomplete-wrapper {
+            position: relative;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container contenedor-grande mt-4">
+    <div class="card shadow">
+
+        <!-- HEADER -->
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-cash-coin"></i> Registrar Pago</h5>
+            <a href="/pagos" class="btn btn-light top-btn">
+                ← Volver
+            </a>
+        </div>
+
+        <!-- BODY -->
+        <div class="card-body">
+            <form method="POST" class="row g-3 needs-validation" novalidate>
+
+                <!-- Alumno con búsqueda -->
+                <div class="col-md-6">
+                    <label class="form-label required">Alumno</label>
+                    <div class="autocomplete-wrapper">
+                        <input type="text" id="buscar_alumno" class="form-control"
+                               placeholder="Escribe nombre, apellido o DNI..." autocomplete="off" required>
+
+                        <input type="hidden" name="id_alumno" id="id_alumno">
+
+                        <div id="sugerencias"
+                             class="list-group position-absolute w-100"
+                             style="z-index:1000; max-height:200px; overflow-y:auto;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Curso -->
+                <div class="col-md-6">
+                    <label class="form-label required">Curso</label>
+                    <select name="curso" id="curso_select" class="form-select" required>
+                        {% for c in cursos %}
+                            <option value="{{ c.nombre }}">{{ c.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Mes Pagado -->
+                <div class="col-md-6">
+                    <label class="form-label required">Periodo (Mes Pagado)</label>
+                    <input type="text" name="mes" class="form-control"
+                           placeholder="Ej: Octubre 2025" required>
+                </div>
+
+                <!-- Tipo de Pago -->
+                <div class="col-md-6">
+                    <label class="form-label required">Tipo de Pago</label>
+                    <select name="tipo_pago" class="form-select" required>
+                        <option value="Total">Total</option>
+                        <option value="Parcial">Parcial</option>
+                    </select>
+                </div>
+
+                <!-- Monto -->
+                <div class="col-md-4">
+                    <label class="form-label required">Monto</label>
+                    <input type="number" step="0.01" name="monto" class="form-control" required>
+                </div>
+
+                <!-- Método de Pago -->
+                <div class="col-md-4">
+                    <label class="form-label required">Método de Pago</label>
+                    <select name="metodo_pago" class="form-select" required>
+                        <option>Efectivo</option>
+                        <option>Yape</option>
+                        <option>Transferencia</option>
+                        <option>Plin</option>
+                        <option>Pago Efectivo</option>
+                        <option>Tarjeta Debito</option>
+                        <option>Tarjeta Credito</option>
+                    </select>
+                </div>
+
+                <!-- Próximo Pago -->
+                <div class="col-md-4">
+                    <label class="form-label">Próximo Pago</label>
+                    <input type="date" name="proximo_pago" class="form-control">
+                </div>
+
+                <!-- Observación -->
+                <div class="col-12">
+                    <label class="form-label">Observaciones</label>
+                    <textarea name="observacion" class="form-control"></textarea>
+                </div>
+
+                <!-- Botones -->
+                <div class="col-12 d-flex gap-2 mt-3 justify-content-end">
+                    <button class="btn btn-primary px-4" type="submit">
+                        <i class="bi bi-save"></i> Guardar
+                    </button>
+
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- AUTOCOMPLETE ALUMNOS -->
+<script>
+document.getElementById("buscar_alumno").addEventListener("input", function() {
+    let q = this.value.trim();
+
+    if (q.length < 2) {
+        document.getElementById("sugerencias").innerHTML = "";
+        return;
+    }
+
+    fetch(`/buscar_alumno?q=${encodeURIComponent(q)}`)
+        .then(res => res.json())
+        .then(data => {
+            let html = "";
+            data.forEach(a => {
+                html += `
+                    <button type="button" 
+                        class="list-group-item list-group-item-action"
+                        onclick="seleccionarAlumno(${a.id}, '${a.nombre.replace(/'/g, "\\'")}')">
+                        ${a.nombre}
+                    </button>`;
+            });
+            document.getElementById("sugerencias").innerHTML = html;
+        });
+});
+
+function seleccionarAlumno(id, nombre) {
+    document.getElementById("buscar_alumno").value = nombre;
+    document.getElementById("id_alumno").value = id;
+    document.getElementById("sugerencias").innerHTML = "";
+
+    // Autollenar curso del alumno
+    fetch(`/obtener_curso_alumno?id_alumno=${id}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.curso) {
+                document.getElementById("curso_select").value = data.curso;
+            } else {
+                alert("El alumno no tiene curso asignado.");
+            }
+        });
+}
+</script>
+
+<!-- Validación Bootstrap -->
+<script>
+(function () {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+})();
+</script>
+
+</body>
+</html>

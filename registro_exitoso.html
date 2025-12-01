@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistencia Registrada</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #e8f0fe, #c8e6c9);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        .card {
+            width: 95%;
+            max-width: 400px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: #1d3557;
+            color: white;
+            text-align: center;
+            padding: 15px 25px;
+        }
+
+        .logo {
+        height: 100px;
+        object-fit: contain;
+        }
+
+        .card-body {
+            padding: 20px;
+            background-color: white;
+        }
+
+        .dato {
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .dato strong {
+            color: #1d3557;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .btn-regresar {
+            background-color: #1d3557;
+            color: white;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .btn-regresar:hover {
+            background-color: #16324f;
+        }
+    
+    .dato {
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+    word-wrap: break-word;        /* Permite saltos de línea */
+    overflow-wrap: break-word;    /* Asegura el ajuste en navegadores modernos */
+    white-space: normal;          /* Evita que el texto se mantenga en una sola línea */
+    text-align: left;             /* Mejora la lectura en pantallas móviles */
+}
+
+    
+    
+    </style>
+</head>
+<body>
+
+    
+<div class="card text-center">
+    <div class="card-header text-center">
+        <div class="d-flex justify-content-center align-items-center gap-4 mb-2">
+            <img src="{{ url_for('static', filename='logo_jgm.png') }}" alt="Logo JGM" class="logo">
+            <img src="{{ url_for('static', filename='logo_icilt.png') }}" alt="Logo ICILT" class="logo">
+        </div>
+            
+            <h5 class="mb-0">✅ Asistencia Registrada</h5>
+        
+        </div>
+
+        <div class="card-body">
+            <p class="dato"><strong>Código:</strong> {{ datos.codigo }}</p>
+            <p class="dato"><strong>Alumno:</strong> {{ datos.nombres }}</p>
+            <p class="dato"><strong>Curso:</strong> {{ datos.curso }}</p>
+            <p class="dato"><strong>Institución:</strong> {{ datos.institucion }}</p>
+            <p class="dato"><strong>Sede:</strong> {{ datos.sede }}</p>
+            <p class="dato"><strong>Horario y Turno:</strong> {{ datos.turno }}</p>
+            <p class="dato"><strong>Fecha:</strong> {{ datos.fecha }}</p>
+            <p class="dato"><strong>Hora:</strong> {{ datos.hora }}</p>
+            <p class="dato"><strong>Registro:</strong> {{ datos.estado_asistencia }}</p>
+           
+
+            
+
+            
+{% if datos.cumple_hoy %}
+<div class="alert alert-warning mt-3 text-center" style="font-size: 1.05rem; border-radius: 12px;">
+    🎂 <strong>¡Feliz cumpleaños, {{ datos.nombres.split(' ')[0] }}! 🎈</strong>  
+    <p class="mt-2 mb-0" style="font-size: 0.9rem; color: #555;">Te deseamos un día lleno de alegría 🎉</p>
+</div>
+
+<!-- Sonido de cumpleaños -->
+<audio id="audioFeliz" src="{{ url_for('static', filename='sounds/birthday.mp3') }}"></audio>
+
+<!-- Efecto de confeti -->
+<canvas id="confetti" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;"></canvas>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const audio = document.getElementById("audioFeliz");
+    audio.play().catch(() => console.log("El navegador bloqueó el sonido"));
+
+    // 🎊 Animación de confeti simple
+    const canvas = document.getElementById("confetti");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const pieces = Array.from({ length: 120 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        size: Math.random() * 8 + 2,
+        color: `hsl(${Math.random() * 360}, 100%, 60%)`,
+        speed: Math.random() * 3 + 2
+    }));
+
+    function update() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+            p.y += p.speed;
+            if (p.y > canvas.height) p.y = -10;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, 2 * Math.PI);
+            ctx.fill();
+        });
+        requestAnimationFrame(update);
+    }
+    update();
+});
+</script>
+{% endif %}
+
+
+
+
+<!-- ===== SIDEBAR =====
+
+            <a href="/" class="btn btn-regresar mt-3 px-4">Volver</a>-->
+        
+        
+        </div>
+
+        <div class="footer">
+            © 2025 JGM Consultores
+        </div>
+    </div>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const audio = document.getElementById("audioFeliz");
+
+    // Si el navegador bloquea, mostramos un botón para habilitarlo
+    audio.play().catch(() => {
+        const btn = document.createElement("button");
+        btn.textContent = "🎵 Reproducir sonido";
+        btn.className = "btn btn-success mt-3";
+        btn.style.borderRadius = "20px";
+        btn.onclick = () => {
+            audio.play();
+            btn.remove(); // Eliminar el botón después de reproducir
+        };
+        document.querySelector(".card-body").appendChild(btn);
+    });
+});
+</script>
+
+
+
+
+
+</body>
+</html>

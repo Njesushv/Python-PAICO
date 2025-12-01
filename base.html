@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}JGM - Sistema{% endblock %}</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+    <!-- Bootstrap Icons (si los usas) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Tu paquete de diseño -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/jgm-theme.css') }}">
+</head>
+<body class="jgm-page">
+
+    <!-- HEADER GLOBAL -->
+    <header class="jgm-header">
+        <div class="jgm-header-logos">
+            <div class="jgm-logo-card">
+                <img src="{{ url_for('static', filename='img/logo_jgm.png') }}" alt="JGM">
+            </div>
+            <div class="jgm-logo-card">
+                <img src="{{ url_for('static', filename='img/logo_icilt.png') }}" alt="ICILT">
+            </div>
+        </div>
+        <div class="jgm-header-title">JGM</div>
+        <div class="jgm-header-subtitle">Juntos ganamos más</div>
+    </header>
+
+    <!-- CONTENIDO DE CADA PÁGINA -->
+    <main class="jgm-main">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- FOOTER GLOBAL (opcional) -->
+    <footer class="jgm-footer">
+        © {{ current_year if current_year is defined else "2025" }} JGM - Todos los derechos reservados
+    </footer>
+
+    <!-- JS de Bootstrap (si lo necesitas) -->
+    <script src="{{ url_for('static', filename='bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>
