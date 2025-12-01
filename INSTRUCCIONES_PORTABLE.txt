@@ -1,0 +1,95 @@
+╔════════════════════════════════════════════════════════════════════╗
+║          ASISTENCIA QR - VERSIÓN PORTABLE                          ║
+║                   Instrucciones de Compilación                     ║
+╚════════════════════════════════════════════════════════════════════╝
+
+📋 PASOS PARA CREAR LA VERSIÓN PORTABLE:
+
+1️⃣ COMPILAR LA APLICACIÓN
+   ────────────────────────────────────────────────────────────────
+   Ejecuta: compilar_portable.bat
+   
+   Esto generará la carpeta: dist\AsistenciaQR\
+
+
+2️⃣ ESTRUCTURA FINAL (ya creada automáticamente)
+   ────────────────────────────────────────────────────────────────
+   dist\AsistenciaQR\
+   ├── AsistenciaQR.exe     ← Ejecutable principal
+   ├── _internal\           ← Dependencias Python (NO TOCAR)
+   ├── static\              ← Recursos de la aplicación
+   │   ├── fondos\          ← Templates de fotochecks
+   │   ├── fotochecks\      ← Fotochecks generados
+   │   ├── fotos_alumnos\   ← Fotos de alumnos
+   │   ├── qrcodes\         ← Códigos QR generados
+   │   ├── sounds\          ← Sonidos del sistema
+   │   ├── config_fotocheck.json
+   │   └── bootstrap.min.css
+   └── base_datos.db        ← Base de datos SQLite
+
+
+3️⃣ DISTRIBUCIÓN (para llevar a otra PC)
+   ────────────────────────────────────────────────────────────────
+   ✅ Copia TODA la carpeta "AsistenciaQR" a un USB o disco externo
+   ✅ En la PC destino, simplemente ejecuta: AsistenciaQR.exe
+   ✅ NO se requiere instalar Python ni dependencias
+   ✅ Funciona en cualquier Windows 10/11
+
+
+⚠️ IMPORTANTE - MANTENIMIENTO DE DATOS:
+   ────────────────────────────────────────────────────────────────
+   
+   📂 Para ACTUALIZAR fotos de alumnos:
+      → Copia archivos .jpg a: static\fotos_alumnos\
+      → Nombra las fotos con el CÓDIGO del alumno (ej: ALU001.jpg)
+   
+   📂 Para RESPALDAR la base de datos:
+      → Copia el archivo: base_datos.db
+   
+   📂 Para ACTUALIZAR templates de fotocheck:
+      → Reemplaza archivos en: static\fondos\
+      → Formato: jgm_template.jpg, icilt_template.jpg
+
+
+🔧 SOLUCIÓN DE PROBLEMAS:
+   ────────────────────────────────────────────────────────────────
+   
+   ❌ "No se cargan las fotos de alumnos"
+      → Verifica que static\ esté en la misma carpeta que el .exe
+      → Verifica que las fotos tengan el nombre correcto (código.jpg)
+   
+   ❌ "No se guardan los fotochecks generados"
+      → Asegúrate que la carpeta no esté en modo solo lectura
+      → Verifica permisos de escritura en static\fotochecks\
+   
+   ❌ "Error al iniciar: ModuleNotFoundError"
+      → Recompila con: compilar_portable.bat
+      → Verifica que _internal\ no esté corrupta
+   
+   ❌ "No encuentra la base de datos"
+      → Copia base_datos.db junto al ejecutable
+      → O déjalo crear una nueva automáticamente
+
+
+📌 NOTAS TÉCNICAS:
+   ────────────────────────────────────────────────────────────────
+   
+   • La carpeta _internal\ contiene todas las librerías Python
+   • La carpeta static\ DEBE estar fuera de _internal\ para escritura
+   • Los templates están DENTRO de _internal\ (solo lectura)
+   • La base de datos se puede mover junto con el ejecutable
+
+
+🎯 VENTAJAS DE ESTA SOLUCIÓN:
+   ────────────────────────────────────────────────────────────────
+   
+   ✅ Archivos configurables sin recompilar (static\)
+   ✅ Base de datos portable y respaldable fácilmente
+   ✅ Fotos y QR se guardan correctamente
+   ✅ Inicio más rápido que --onefile
+   ✅ Fácil de actualizar contenido (solo reemplazar archivos)
+
+
+═══════════════════════════════════════════════════════════════════
+Última actualización: 2025
+═══════════════════════════════════════════════════════════════════
