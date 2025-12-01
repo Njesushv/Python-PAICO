@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Alumno</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+</head>
+<body class="p-4">
+    <div class="container">
+        <h2 class="mb-4">✏️ Editar Alumno</h2>
+        <form method="POST" action="{{ url_for('editar', id=alumno.id_alumno) }}" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Nombres</label>
+                <input type="text" name="nombres" class="form-control" required value="{{ nombres_val }}">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Apellidos</label>
+                <input type="text" name="apellidos" class="form-control" value="{{ apellidos_val }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">DNI</label>
+                <input type="text" name="dni" class="form-control" required value="{{ alumno.dni }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Fecha de Nacimiento</label>
+                <input type="date" name="fecha_nacimiento" class="form-control" value="{{ alumno.fecha_nacimiento }}">
+            </div>
+
+
+            <div class="col-md-6">
+                <label class="form-label">Curso</label>
+            <select name="id_curso" class="form-select" required>
+                <option value="">Seleccione un curso</option>
+                {% for c in cursos %}
+                    <option value="{{ c.id_curso }}"
+                            {% if c.id_curso == id_curso_actual %}selected{% endif %}>
+                        {{ c.nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            </div>
+
+
+    
+            <div class="col-md-6">
+                <label class="form-label">Institución</label>
+                <select name="institucion" class="form-select" required>
+                    <option value="" disabled {% if not alumno.institucion %}selected{% endif %}>-- Selecciona una institución --</option>
+                    <option value="ICILT" {% if alumno.institucion == "ICILT" %}selected{% endif %}>ICILT</option>
+                    <option value="JGM" {% if alumno.institucion == "JGM" %}selected{% endif %}>JGM</option>
+                </select>
+            </div>
+
+                    <div class="mb-3">
+            <label class="form-label">Grado Académico</label>
+            <select name="grado_academico" class="form-select" required>
+                {% for g in grados %}
+                    <option value="{{ g }}" {% if alumno.grado_academico == g %}selected{% endif %}>
+                        {{ g }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+
+
+
+
+
+            <div class="col-md-6">
+                <label class="form-label">Celular</label>
+                <input type="text" name="celular" class="form-control" value="{{ alumno.celular or '' }}">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Correo</label>
+                <input type="email" name="correo" class="form-control" value="{{ alumno.correo or '' }}">
+            </div>
+
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <a href="{{ url_for('control_alumnos') }}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    </div>
+</body>
+</html>

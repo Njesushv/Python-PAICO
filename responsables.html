@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <title>Administrar Responsables</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+    }
+
+    .contenedor-grande {
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    /* CARD PRINCIPAL */
+    .card {
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+      animation: fadeIn .35s ease;
+    }
+
+    .card-header {
+      background-color: #1d3557;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .btn {
+      border-radius: 20px;
+      font-weight: 500;
+      padding: 6px 14px !important;
+      font-size: 13px !important;
+      transition: all 0.15s ease-in-out;
+    }
+
+    .btn-primary {
+      background-color: #1d3557;
+      border-color: #1d3557;
+    }
+
+    .btn-primary:hover {
+      background-color: #12263f;
+      border-color: #12263f;
+    }
+
+    .btn-success,
+    .btn-danger {
+      border-radius: 20px;
+    }
+
+    table th, table td {
+      text-align: center !important;
+      vertical-align: middle !important;
+      padding: 6px 10px !important;
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    table thead th {
+      background-color: #1d3557;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .table-striped > tbody > tr:nth-of-type(odd) > * {
+      background-color: #f1f5fa;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container contenedor-grande mt-4">
+    <div class="card">
+      <!-- HEADER -->
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="bi bi-person-badge"></i> Administración de Responsables
+        </h5>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-light btn-sm">
+          <i class="bi bi-arrow-left-circle"></i> Volver
+        </a>
+      </div>
+
+      <!-- BODY -->
+      <div class="card-body">
+
+        <div id="mensajeSeleccion" class="alert alert-warning d-none py-2 mb-3 small">
+          <i class="bi bi-exclamation-triangle"></i> Por favor, selecciona un responsable primero.
+        </div>
+
+        <div class="mb-3 d-flex gap-2">
+          <a href="{{ url_for('agregar_responsable') }}" class="btn btn-success">
+            <i class="bi bi-person-plus"></i> Agregar Responsable
+          </a>
+
+          <button id="btnEditar" class="btn btn-primary" disabled>
+            <i class="bi bi-pencil-square"></i> Editar
+          </button>
+
+          <button id="btnEliminar" class="btn btn-danger" disabled>
+            <i class="bi bi-trash"></i> Eliminar
+          </button>
+        </div>
+
+        <div class="table-responsive shadow-sm">
+          <table id="tablaResponsables" class="table table-hover table-striped table-bordered align-middle text-center mb-0">
+            <thead>
+              <tr>
+                <th style="width: 50px;">
+                  <input type="checkbox" id="selectAll" title="Seleccionar todos">
+                </th>
+                <th>ID</th>
+                <th>Nombres</th>
+                <th>DNI</th>
+                <th>Celular</th>
+                <th>Correo</th>
+                <th>Cargo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in responsables %}
+              <tr data-id="{{ r.id_responsable }}">
+                <td><input type="checkbox" class="check-responsable"></td>
+                <td>{{ r.id_responsable }}</td>
+                <td>{{ r.nombres }}</td>
+                <td>{{ r.dni }}</td>
+                <td>{{ r.celular or '-' }}</td>
+                <td>{{ r.correo or '-' }}</td>
+                <td>{{ r.cargo or '-' }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="7" class="text-center text-muted py-4 no-responsables">
+                  <i class="bi bi-info-circle"></i> No hay responsables registrados aún.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const checkboxes = document.querySelectorAll(".check-responsable");
+      const selectAll  = document.getElementById("selectAll");
+      const btnEditar  = document.getElementById("btnEditar");
+      const btnEliminar= document.getElementById("btnEliminar");
+      const mensaje    = document.getElementById("mensajeSeleccion");
+      let idSeleccionado = null;
+
+      checkboxes.forEach(chk => {
+        chk.addEventListener("change", () => {
+          checkboxes.forEach(c => { if (c !== chk) c.checked = false; });
+          const fila = chk.closest("tr");
+          idSeleccionado      = chk.checked ? fila.getAttribute("data-id") : null;
+          btnEditar.disabled  = !idSeleccionado;
+          btnEliminar.disabled= !idSeleccionado;
+          mensaje.classList.add("d-none");
+        });
+      });
+
+      selectAll.addEventListener("change", () => {
+        checkboxes.forEach(chk => chk.checked = selectAll.checked);
+        if (selectAll.checked && checkboxes.length > 0) {
+          idSeleccionado      = checkboxes[0].closest("tr").getAttribute("data-id");
+          btnEditar.disabled  = false;
+          btnEliminar.disabled= false;
+        } else {
+          idSeleccionado      = null;
+          btnEditar.disabled  = true;
+          btnEliminar.disabled= true;
+        }
+        mensaje.classList.add("d-none");
+      });
+
+      btnEditar.addEventListener("click", () => {
+        if (idSeleccionado) {
+          window.location.href = `/editar_responsable/${idSeleccionado}`;
+        } else {
+          mensaje.classList.remove("d-none");
+        }
+      });
+
+      btnEliminar.addEventListener("click", () => {
+        if (!idSeleccionado) {
+          mensaje.classList.remove("d-none");
+          return;
+        }
+        if (confirm("¿Seguro que deseas eliminar este responsable?")) {
+          window.location.href = `/eliminar_responsable/${idSeleccionado}`;
+        }
+      });
+    });
+  </script>
+
+  <!-- Bloqueo de botón atrás (tal como lo tenías) -->
+  <script>
+    history.replaceState(null, "", location.href);
+    window.onpopstate = function() {
+        history.go(5);
+    };
+  </script>
+
+  <script>
+    // Bucle eterno anti-regresar
+    window.onload = function () {
+        setTimeout(function () {
+            history.pushState(null, "", location.href);
+        }, 0);
+    };
+
+    window.onpopstate = function () {
+        history.pushState(null, "", location.href);
+    };
+  </script>
+
+</body>
+</html>

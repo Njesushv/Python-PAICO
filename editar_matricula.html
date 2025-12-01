@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Matrícula</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: "Segoe UI", sans-serif;
+        }
+        .container {
+            margin-top: 40px;
+            max-width: 900px;
+        }
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #1d3557;
+            color: white;
+            font-weight: 600;
+        }
+        .btn {
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        .form-label.required::after {
+            content: " *";
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card shadow">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-pencil-square"></i> Editar Matrícula
+            </h5>
+            <a href="{{ url_for('administrar_matriculas') }}" class="btn btn-light btn-sm">
+                ← Volver
+            </a>
+        </div>
+
+        <div class="card-body">
+<form method="POST" class="needs-validation" novalidate>
+
+    <!-- Alumno (fila completa) -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <label for="id_alumno" class="form-label required">Alumno</label>
+            <select name="id_alumno" id="id_alumno" class="form-select" required>
+                {% for a in alumnos %}
+                    <option value="{{ a.id_alumno }}" {% if a.id_alumno == matricula.id_alumno %}selected{% endif %}>
+                        {{ a.nombres }} ({{ a.codigo }})
+                    </option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">Debe seleccionar un alumno.</div>
+        </div>
+    </div>
+
+<!-- Curso (fila completa) -->
+<div class="row mb-3">
+    <div class="col-12">
+        <label for="id_curso" class="form-label required">Curso</label>
+        <select name="id_curso" id="id_curso" class="form-select" required>
+            <option value="0">-- Selecciona un curso --</option>
+            {% for c in cursos %}
+                <option value="{{ c.id_curso }}"
+                        data-sede="{{ c.id_sede }}"
+                        data-horario="{{ c.horario_texto or '' }}"
+                        data-dias="{{ c.dias or '' }}"
+                        {% if c.id_curso == matricula.id_curso %}selected{% endif %}>
+                    {{ c.nombre }} - HORARIO: {{ c.horario_texto }}
+                </option>
+            {% endfor %}
+        </select>
+        <div class="invalid-feedback">Debe seleccionar un curso.</div>
+    </div>
+</div>
+
+    <!-- Fechas: Matrícula / Vencimiento -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="fecha_matricula" class="form-label required">Fecha de Matrícula</label>
+            <input type="date"
+                   name="fecha_matricula"
+                   id="fecha_matricula"
+                   class="form-control"
+                   value="{{ matricula.fecha_matricula }}"
+                   required>
+            <div class="invalid-feedback">Debe ingresar la fecha de matrícula.</div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="fecha_vencimiento" class="form-label required">Fecha Vencimiento de Mensualidad</label>
+            <input type="date"
+                   name="fecha_vencimiento"
+                   id="fecha_vencimiento"
+                   class="form-control"
+                   value="{{ matricula.fecha_vencimiento }}"
+                   required>
+            <div class="invalid-feedback">Debe ingresar la fecha de vencimiento.</div>
+        </div>
+    </div>
+
+    <!-- Deuda / Tipo Pago / Método / Monto -->
+    <div class="row mb-3">
+        <div class="col-md-3 col-sm-6">
+            <label for="deuda" class="form-label">Deuda (S/)</label>
+            <input type="number" step="0.01" name="deuda" id="deuda"
+                   class="form-control" value="{{ matricula.deuda }}">
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <label for="tipo_pago" class="form-label">Tipo de Pago</label>
+            <select name="tipo_pago" id="tipo_pago" class="form-select" required onchange="autocompletarMonto()">
+                <option value="SIN INICIAL"  {% if matricula.tipo_pago == 'SIN INICIAL' %}selected{% endif %}>Sin Inicial</option>
+                <option value="PARCIAL"      {% if matricula.tipo_pago == 'PARCIAL' %}selected{% endif %}>Parcial</option>
+                <option value="TOTAL"        {% if matricula.tipo_pago == 'TOTAL' %}selected{% endif %}>Total</option>
+            </select>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <label for="metodo_pago" class="form-label">Método de Pago</label>
+            <select name="metodo_pago" id="metodo_pago" class="form-select" required>
+                <option value="">-- Selecciona --</option>
+                <option value="EFECTIVO"          {% if matricula.metodo_pago == 'EFECTIVO' %}selected{% endif %}>EFECTIVO</option>
+                <option value="BBVA"               {% if matricula.metodo_pago == 'BBVA' %}selected{% endif %}>BBVA</option>
+                <option value="BANCO DE LA NACION" {% if matricula.metodo_pago == 'BANCO DE LA NACION' %}selected{% endif %}>BANCO DE LA NACION</option>
+                <option value="BCP"                {% if matricula.metodo_pago == 'BCP' %}selected{% endif %}>BCP</option>
+                <option value="SCOTIABANK"         {% if matricula.metodo_pago == 'SCOTIABANK' %}selected{% endif %}>SCOTIABANK</option>
+                <option value="INTERBANK"          {% if matricula.metodo_pago == 'INTERBANK' %}selected{% endif %}>INTERBANK</option>
+                <option value="YAPE"               {% if matricula.metodo_pago == 'YAPE' %}selected{% endif %}>YAPE</option>
+                <option value="PLIN"               {% if matricula.metodo_pago == 'PLIN' %}selected{% endif %}>PLIN</option>
+            </select>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <label class="form-label">Monto Matrícula (S/)</label>
+            <input type="number" step="0.01" name="monto" id="monto"
+                   class="form-control" value="{{ matricula.monto }}" required>
+        </div>
+    </div>
+
+    <!-- Institución / Aula / Saldo / Mensualidad -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label required">Institución</label>
+            <select name="institucion" id="institucion" class="form-select" required>
+                <option value="" disabled {% if not matricula.institucion %}selected{% endif %}>
+                    -- Selecciona una institución --
+                </option>
+                <option value="ICILT" {% if matricula.institucion == 'ICILT' %}selected{% endif %}>ICILT</option>
+                <option value="JGM"   {% if matricula.institucion == 'JGM' %}selected{% endif %}>JGM</option>
+            </select>
+            <div class="invalid-feedback">Debes seleccionar una institución.</div>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">Aula</label>
+            <input type="text" name="aula"
+                   value="{{ matricula.aula or '' }}"
+                   class="form-control" maxlength="50">
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <label class="form-label">Saldo Matrícula (S/)</label>
+            <input type="number" step="0.01" name="saldo_matricula" id="saldo_matricula"
+                   class="form-control" value="{{ matricula.saldo_matricula }}" required>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <label class="form-label">Mensualidad</label>
+            <input type="number" step="0.01" name="mensualidad" id="mensualidad"
+                   class="form-control" value="{{ matricula.mensualidad }}" required>
+        </div>
+    </div>
+
+    <!-- Observación -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <label class="form-label">Observación</label>
+            <textarea name="observacion"
+                      class="form-control"
+                      rows="3"
+                      placeholder="Escribe alguna observación...">{{ matricula.observacion or '' }}</textarea>
+        </div>
+    </div>
+
+    <!-- Estado -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <label for="estado" class="form-label">Estado</label>
+            <select name="estado" id="estado" class="form-select">
+                <option value="Matriculado (Pago inicial)" {% if matricula.estado == 'Matriculado (Pago inicial)' %}selected{% endif %}>Matriculado (Pago inicial)</option>
+                <option value="Al dia (Pago puntual de mes)" {% if matricula.estado == 'Al dia (Pago puntual de mes)' %}selected{% endif %}>Al día (Pago puntual de mes)</option>
+                <option value="Con Deuda (Deuda Vencida)" {% if matricula.estado == 'Con Deuda (Deuda Vencida)' %}selected{% endif %}>Con Deuda (Deuda Vencida)</option>
+                <option value="Moroso (Debe mas de 2 meses)" {% if matricula.estado == 'Moroso (Debe mas de 2 meses)' %}selected{% endif %}>Moroso (Debe más de 2 meses)</option>
+                <option value="Desertor (Retiro antes del fin de curso)" {% if matricula.estado == 'Desertor (Retiro antes del fin de curso)' %}selected{% endif %}>Desertor (Retiro antes del fin de curso)</option>
+                <option value="Inactivo (Ex estudiantes)" {% if matricula.estado == 'Inactivo (Ex estudiantes)' %}selected{% endif %}>Inactivo (Ex estudiantes)</option>
+            </select>
+        </div>
+    </div>
+                <!-- Botones -->
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('administrar_matriculas') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Guardar Cambios
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+<script>
+const sedeSelect  = document.getElementById("id_sede");
+const cursoSelect = document.getElementById("id_curso");
+
+if (sedeSelect && cursoSelect) {
+
+    // Cuando cambio SEDE → filtro cursos
+    sedeSelect.addEventListener("change", function () {
+        const sede = this.value;
+        if (!sede) return;
+
+        fetch(`/api/cursos_por_sede?id_sede=${sede}`)
+            .then(res => res.json())
+            .then(data => {
+                cursoSelect.innerHTML = "";
+
+                if (!data.length) {
+                    cursoSelect.innerHTML =
+                        `<option value="0">No hay cursos en esta sede</option>`;
+                    return;
+                }
+
+                cursoSelect.innerHTML =
+                    `<option value="0" selected>-- Selecciona un curso --</option>`;
+
+                data.forEach(c => {
+                    const opt = document.createElement("option");
+                    opt.value = c.id_curso;
+                    opt.textContent = c.nombre;
+                    opt.dataset.sede = sede;
+                    cursoSelect.appendChild(opt);
+                });
+            });
+    });
+
+    // Cuando cambio CURSO → autoseleccionar sede
+    cursoSelect.addEventListener("change", function () {
+        const opt = this.options[this.selectedIndex];
+        if (!opt) return;
+
+        const sedeId = opt.dataset.sede;
+        if (sedeId) sedeSelect.value = sedeId;
+    });
+}
+</script>
+
+
+
+
+
+
+
+
+
+
+<!-- Validación Bootstrap -->
+<script>
+(function () {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+})();
+</script>
+
+<!-- Alerta de deuda -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const deudaInput = document.getElementById("deuda");
+    const formCard = document.querySelector(".card-body");
+    let alerta = null;
+
+    function mostrarAlerta(mensaje) {
+        if (alerta) alerta.remove();
+
+        alerta = document.createElement("div");
+        alerta.className = "alert alert-warning text-center mt-2 fade show";
+        alerta.style.borderRadius = "12px";
+        alerta.style.fontWeight = "500";
+        alerta.innerHTML = mensaje;
+        formCard.insertBefore(alerta, formCard.firstChild);
+
+        setTimeout(() => {
+            alerta.classList.remove("show");
+            alerta.classList.add("fade");
+            alerta.style.opacity = 0;
+            setTimeout(() => alerta.remove(), 500);
+        }, 3000);
+    }
+
+    function verificarDeuda() {
+        const valor = parseFloat(deudaInput.value) || 0;
+        if (valor > 0) {
+            mostrarAlerta(`⚠️ Este alumno tiene una deuda pendiente de S/. ${valor.toFixed(2)}`);
+        }
+    }
+
+    verificarDeuda();
+    deudaInput.addEventListener("input", verificarDeuda);
+});
+</script>
+
+<!-- Autocompletar monto por tipo de pago -->
+<script>
+function autocompletarMonto() {
+    const tipo = document.querySelector('[name="tipo_pago"]').value;
+    const monto = document.getElementById('monto');
+
+    if (tipo === "SIN INICIAL")      monto.value = 0;
+    else if (tipo === "PARCIAL")     monto.value = 100;
+    else if (tipo === "TOTAL")       monto.value = 300;
+
+    monto.focus();
+}
+</script>
+
+</body>
+</html>

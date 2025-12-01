@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Alumnos</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+      body {
+        background-color: #f8f9fa;
+        font-family: "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 30px;
+      }
+
+      .contenedor-grande {
+        max-width: 1900px;
+        margin: auto;
+      }
+
+      /* CARD PRINCIPAL */
+      .card {
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 3px 18px rgba(0, 0, 0, 0.10);
+        animation: fadeIn .35s ease;
+      }
+
+      .card-header {
+        background-color: #1d3557;
+        color: #ffffff;
+        font-weight: 600;
+      }
+
+      .btn {
+        border-radius: 20px;
+        font-weight: 500;
+        padding: 6px 14px !important;
+        font-size: 13px !important;
+        transition: all 0.15s ease-in-out;
+      }
+
+      .btn-primary {
+        background-color: #1d3557;
+        border-color: #1d3557;
+      }
+
+      .btn-primary:hover {
+        background-color: #12263f;
+        border-color: #12263f;
+      }
+
+      /* TABLA COMPACTA */
+      .table {
+        font-size: 11px;
+      }
+
+      .table td, .table th {
+        padding: 6px 10px !important;
+      }
+
+      .table thead th {
+        background: #1d3557 !important;
+        color: white;
+        font-size: 11px;
+        text-align: center;
+      }
+
+      .table tbody tr:hover {
+        background: #f1f5f9;
+      }
+
+      /* Limitar columnas largas */
+      td.nombre,
+      td.correo,
+      td.horario,
+      td.curso,
+      td.estado {
+        max-width: 150px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      td.nombre {
+        text-align: left !important;
+      }
+
+      .badge {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+      }
+
+      .btn-container {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+      }
+
+      .table-responsive {
+        max-height: 720px;
+        overflow-y: auto;
+        border-radius: 18px;
+      }
+
+      .badge-estado {
+        font-size: 0.70rem;
+        padding: 2px 6px;
+        line-height: 1.1;
+        border-radius: 8px;
+        white-space: nowrap;    /* que no haga salto de línea */
+      }
+
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+</head>
+
+<body>
+  <div class="container contenedor-grande">
+    <div class="card">
+      <!-- HEADER -->
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          🧑‍💼 Gestión de Alumnos
+        </h5>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-light btn-sm">
+          <i class="bi bi-arrow-left-circle"></i> Volver
+        </a>
+      </div>
+
+      <!-- BODY -->
+      <div class="card-body">
+
+        <!-- FILTROS -->
+        <form method="get" action="{{ url_for('control_alumnos') }}" class="row g-2 mb-3">
+          <!-- Filtro por curso -->
+          <div class="col-md-4">
+            <select name="curso" class="form-select">
+              <option value="">📘 Filtrar por curso...</option>
+              {% for c in cursos %}
+                <option value="{{ c }}" {% if curso_filtro == c %}selected{% endif %}>
+                  {{ c }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Buscador de alumno -->
+          <div class="col-md-4">
+            <input
+              type="text"
+              name="buscar_alumno"
+              class="form-control"
+              placeholder="Alumno: nombre, DNI o código"
+              value="{{ buscar_alumno or '' }}">
+          </div>
+
+          <!-- Botón Buscar -->
+          <div class="col-md-2">
+            <button class="btn btn-primary w-100">
+              <i class="bi bi-search"></i> Buscar
+            </button>
+          </div>
+
+          <!-- Exportar PDF con mismos filtros -->
+          <div class="col-md-2">
+            <a href="{{ url_for('exportar_alumnos_pdf',
+                                curso=curso_filtro,
+                                buscar_alumno=buscar_alumno) }}"
+               class="btn btn-danger w-100">
+              <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+            </a>
+          </div>
+        
+        
+          <!-- Limpiar filtros -->
+  <div class="col-md-2">
+    <a href="{{ url_for('control_alumnos') }}" class="btn btn-secondary w-100">
+      <i class="bi bi-x-circle"></i> Limpiar
+    </a>
+  </div>
+        
+        
+        
+        
+        </form>
+
+
+
+
+
+
+        <!-- TABLA -->
+        <div class="table-responsive">
+          <table class="table table-hover table-bordered align-middle text-center">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Código</th>
+                <th>DNI</th>
+                <th>Nombre</th>
+                <th>F. Nacimiento</th>
+                <th>Celular</th>
+                <th>Correo</th>
+                <th>Institución</th>
+                <th>Grado Académico</th>
+                <th>Curso</th>
+                <th>Descripción Horario</th>
+                <th>Deuda</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in alumnos %}
+              <tr>
+                <td>{{ a.id_alumno }}</td>
+                <td><strong>{{ a.codigo or '-' }}</strong></td>
+                <td>{{ a.dni or '-' }}</td>
+                <td class="nombre">{{ a.nombres or '-' }}</td>
+                <td>{{ a.fecha_nacimiento or '-' }}</td>
+                <td>{{ a.celular or '-' }}</td>
+                <td class="correo">{{ a.correo or '-' }}</td>
+                <td>{{ a.institucion or '-' }}</td>
+                <td>{{ a.grado_academico or '-' }}</td>
+                <td class="curso">{{ a.curso or '-' }}</td>
+                <td class="horario">{{ a.descripcion_horario or '-' }}</td>
+
+                <td>
+                  {% if a.deuda and a.deuda > 0 %}
+                    <span class="badge bg-danger">S/ {{ "%.2f"|format(a.deuda) }}</span>
+                  {% else %}
+                    <span class="badge bg-success">0.00</span>
+                  {% endif %}
+                </td>
+
+                <td class="estado">
+                {% set estado = a.estado_matricula or '' %}
+
+                {% if estado == 'Con Deuda (Deuda Vencida)' %}
+                  <span class="badge bg-danger badge-estado" title="{{ estado }}">
+                    Deuda vencida
+                  </span>
+
+                {% elif estado == 'Matriculado (Pago inicial)' %}
+                  <span class="badge bg-success badge-estado" title="{{ estado }}">
+                    Matriculado (Pago inicial)
+                  </span>
+
+                {% elif estado == 'Inactivo (Ex estudiantes)' %}
+                  <span class="badge bg-secondary badge-estado" title="{{ estado }}">
+                    Inactivo
+                  </span>
+
+                {% elif estado == 'Desertor (Retiro antes del fin de curso)' %}
+                  <span class="badge bg-secondary badge-estado" title="{{ estado }}">
+                    Desertor
+                  </span>
+
+                {% elif estado == 'Moroso (Debe mas de 2 meses)' %}
+                  <span class="badge bg-warning text-dark badge-estado" title="{{ estado }}">
+                    Moroso (+2 meses)
+                  </span>
+
+                {% elif estado == 'Al dia (Pago puntual de mes)' %}
+                  <span class="badge bg-info text-dark badge-estado" title="{{ estado }}">
+                    Al día
+                  </span>
+
+                {% else %}
+                  <span class="badge bg-secondary badge-estado" title="{{ a.estado_alumno }}">
+                    {{ a.estado_alumno or '—' }}
+                  </span>
+                {% endif %}
+              </td>
+
+
+                <td class="btn-container">
+                  <a href="{{ url_for('editar', id_alumno=a.id_alumno) }}"
+                     class="btn btn-sm btn-primary" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+
+
+                  {% if a.codigo %}
+                    {# Aquí podrías poner botón de ver/descargar QR si lo usas #}
+                  {% else %}
+                    <span class="badge bg-secondary">Sin QR</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="14" class="text-muted text-center py-3">
+                  No hay alumnos registrados.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</body>
+</html>

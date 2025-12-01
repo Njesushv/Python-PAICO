@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Alumnos Morosos</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+        }
+
+        .contenedor-grande {
+            max-width: 1700px;
+            margin: auto;
+        }
+
+        /* CARD / CONTENIDO */
+        .card {
+            border-radius: 20px;
+            overflow: hidden;
+            animation: fadeIn .35s ease;
+        }
+
+        .card-header {
+            background-color: #1d3557;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .btn {
+            border-radius: 20px;
+            font-weight: 500;
+            padding: 4px 10px !important;
+            font-size: 12px !important;
+        }
+
+        .top-btn {
+            padding: 8px 14px !important;
+            font-size: 14px !important;
+        }
+
+        .btn-primary {
+            background-color: #1d3557;
+            border-color: #1d3557;
+        }
+
+        .btn-primary:hover {
+            background-color: #12263f;
+            border-color: #12263f;
+        }
+
+        table th, table td {
+            text-align: center !important;
+            vertical-align: middle !important;
+            padding: 6px 10px !important;
+            font-size: 13px;
+            line-height: 0.4;
+        }
+
+        table thead th {
+            background-color: #1d3557;
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        tr:hover {
+            background-color: #f1f3f5;
+        }
+
+        .deuda-roja {
+            color: #d90429;
+            font-weight: bold;
+        }
+
+        h5 .alert-title {
+            color: #ffd166;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container contenedor-grande mt-4">
+
+    <div class="card shadow">
+        <!-- HEADER -->
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span class="alert-title"> Alumnos con Pagos Pendientes</span>
+            </h5>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-light top-btn">
+                <i class="bi bi-arrow-left-circle"></i> Volver
+            </a>
+        </div>
+
+        <!-- BODY -->
+        <div class="card-body">
+
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle text-center mb-0">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Alumno</th>
+                            <th>Curso</th>
+                            <th>Sede</th>
+                            <th>Fecha Matrícula</th>
+                            <th>Deuda (S/)</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in pagos_pendientes %}
+                        <tr>
+                            <td>{{ m.codigo_alumno }}</td>
+                            <td>{{ m.nombre_alumno }}</td>
+                            <td>{{ m.nombre_curso }}</td>
+                            <td>{{ m.sede }}</td>
+                            <td>{{ m.fecha_matricula }}</td>
+                            <td class="deuda-roja">{{ "%.2f"|format(m.deuda or 0) }}</td>
+                            <td>{{ m.estado }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if pagos_pendientes|length == 0 %}
+            <p class="text-center text-success fw-bold mt-3">
+                ✅ No hay alumnos morosos. Todo en orden.
+            </p>
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Generar Fotocheck Docente</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+
+<body class="p-4">
+
+    <h2 class="mb-4">Generar Fotocheck - Docentes</h2>
+
+    <!-- FORMULARIO OCULTO QUE ENVÍA LOS DATOS A FLASK -->
+    <form id="form_fotocheck_doc" method="POST" action="/generar_fotocheck_docente">
+        <input type="hidden" name="id_docente" id="id_docente">
+        <input type="hidden" name="tipo" id="tipo">
+    </form>
+
+    <!-- LISTA DE DOCENTES -->
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>DNI</th>
+                <th>Nombres</th>
+                <th>Especialidad</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for d in docentes %}
+            <tr>
+                <td>{{ d.dni }}</td>
+                <td>{{ d.nombres }}</td>
+                <td>{{ d.especialidad }}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary"
+                            onclick="seleccionarDocente('{{ d.id_docente }}')">
+                        Seleccionar
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- SELECCIÓN DE FORMATO -->
+    <h5>Formato de Fotocheck</h5>
+
+    <div class="d-flex gap-3 mb-4">
+        <button class="btn btn-outline-success"
+                onclick="seleccionarFormato('jgm')">
+            Formato JGM
+        </button>
+
+        <button class="btn btn-outline-info"
+                onclick="seleccionarFormato('icilt')">
+            Formato ICILT
+        </button>
+    </div>
+
+    <!-- BOTÓN FINAL PARA GENERAR -->
+    <button class="btn btn-danger btn-lg"
+            onclick="generarFotocheck()">
+        Generar Fotocheck
+    </button>
+
+</body>
+
+<script>
+    // Guardar ID del docente seleccionado
+    function seleccionarDocente(id) {
+        document.getElementById("id_docente").value = id;
+        alert("Docente seleccionado correctamente.");
+    }
+
+    // Guardar el formato elegido
+    function seleccionarFormato(f) {
+        document.getElementById("tipo").value = f;
+        alert("Formato seleccionado: " + f.toUpperCase());
+    }
+
+    // Enviar el formulario al backend Flask
+    function generarFotocheck() {
+        const idDoc = document.getElementById("id_docente").value;
+        const tipo = document.getElementById("tipo").value;
+
+        // Validación previa (igual que tu backend)
+        if (!idDoc || !tipo) {
+            alert("Debes seleccionar un docente y un formato.");
+            return;
+        }
+
+        document.getElementById("form_fotocheck_doc").submit();
+    }
+</script>
+
+</html>

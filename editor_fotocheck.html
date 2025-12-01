@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editor de Fotocheck</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #edf2f7, #e2e8f0);
+            font-family: 'Segoe UI', sans-serif;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="m-0"><i class="bi bi-pencil-square"></i> Editor de Fotocheck</h3>
+        <a href="{{ url_for('generar_fotocheck') }}" class="btn btn-light btn-sm">
+            <i class="bi bi-arrow-left-circle"></i> Volver
+        </a>
+    </div>
+    
+    <div class="row">
+        <!-- Panel de Control -->
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">🛠️ Configuración</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Selector de Formato -->
+                    <div class="mb-3">
+                        <label class="form-label">Formato de Fotocheck</label>
+                        <select id="formatoSelect" class="form-select">
+                            <option value="jgm">JGM</option>
+                            <option value="icilt">ICILT</option>
+                        </select>
+                    </div>
+
+                    <!-- Indicación sobre fotos -->
+                    <div class="mb-3">
+                        <div class="alert alert-info">
+                            <small>💡 Las fotos se gestionan en la página de generación de fotochecks</small>
+                        </div>
+                    </div>
+
+                    <!-- Elementos Editables -->
+                    <div class="mb-3">
+                        <label class="form-label">Elementos</label>
+                        <div class="list-group">
+                            <button class="list-group-item list-group-item-action active" data-element="foto">
+                                📸 Foto
+                            </button>
+                            <button class="list-group-item list-group-item-action" data-element="nombre">
+                                📝 Nombre
+                            </button>
+                            <button class="list-group-item list-group-item-action" data-element="curso">
+                                📚 Curso
+                            </button>
+                            <button class="list-group-item list-group-item-action" data-element="turno">
+                                🕒 Turno
+                            </button>
+                            <button class="list-group-item list-group-item-action" data-element="sede">
+                                🏢 Sede
+                            </button>
+                            <button class="list-group-item list-group-item-action" data-element="qr">
+                                🔲 Código QR
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Ajustes del Elemento Seleccionado -->
+                    <div class="mb-3">
+                        <label class="form-label">Ajustes del Elemento</label>
+                        <div class="input-group mb-2">
+                            <span class="input-group-text">X</span>
+                            <input type="number" id="posX" class="form-control" min="0">
+                            <span class="input-group-text">px</span>
+                        </div>
+                        <div class="input-group mb-2">
+                            <span class="input-group-text">Y</span>
+                            <input type="number" id="posY" class="form-control" min="0">
+                            <span class="input-group-text">px</span>
+                        </div>
+                        <div class="input-group mb-2">
+                            <span class="input-group-text">Ancho</span>
+                            <input type="number" id="width" class="form-control" min="0">
+                            <span class="input-group-text">px</span>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text">Alto</span>
+                            <input type="number" id="height" class="form-control" min="0">
+                            <span class="input-group-text">px</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón de Acción -->
+            <div class="d-grid">
+                <button id="btnGuardar" class="btn btn-primary">
+                    💾 Guardar Configuración
+                </button>
+            </div>
+        </div>
+
+        <!-- Área de Preview -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <div id="previewArea" class="position-relative mx-auto" 
+                         style="width:639px; height:1016px; border:2px dashed #ccc;">
+                        <!-- El fotocheck se renderizará aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+<script>
+// Configuración por defecto (ajustada a 639x1016)
+const defaultConfig = {
+    jgm: {
+        foto: { x: 175, y: 120, width: 160, height: 200 },
+        nombre: { x: 135, y: 336, width: 240, height: 48 },
+        curso: { x: 135, y: 392, width: 240, height: 24 },
+        turno: { x: 135, y: 424, width: 240, height: 24 },
+        sede: { x: 135, y: 456, width: 240, height: 24 },
+        qr: { x: 207, y: 496, width: 96, height: 96 }
+    },
+    icilt: {
+        foto: { x: 175, y: 120, width: 160, height: 200 },
+        nombre: { x: 135, y: 336, width: 240, height: 48 },
+        curso: { x: 135, y: 392, width: 240, height: 24 },
+        turno: { x: 135, y: 424, width: 240, height: 24 },
+        sede: { x: 135, y: 456, width: 240, height: 24 },
+        qr: { x: 207, y: 496, width: 96, height: 96 }
+    }
+};
+
+let currentConfig = JSON.parse(JSON.stringify(defaultConfig));
+let selectedElement = 'foto';
+let currentFormat = 'jgm';
+const previewArea = document.getElementById('previewArea');
+let previewScale = 1;
+
+function updateInputs() {
+    const config = currentConfig[currentFormat][selectedElement];
+    document.getElementById('posX').value = config.x;
+    document.getElementById('posY').value = config.y;
+    document.getElementById('width').value = config.width;
+    document.getElementById('height').value = config.height;
+}
+
+function updatePreview() {
+    previewArea.innerHTML = '';
+    
+    // Destruir instancias previas de interact.js para evitar conflictos
+    interact('.position-absolute').unset();
+    
+    const bgSrc = `/static/fondos/${currentFormat}_template.jpg`;
+    previewArea.style.backgroundImage = `url('${bgSrc}')`;
+    previewArea.style.backgroundSize = 'contain';
+    previewArea.style.backgroundRepeat = 'no-repeat';
+
+    Object.entries(currentConfig[currentFormat]).forEach(([element, config]) => {
+        const el = document.createElement('div');
+        el.id = `preview_${element}`;
+        el.className = 'position-absolute';
+        el.style.left = `${config.x}px`;
+        el.style.top = `${config.y}px`;
+        el.style.width = `${config.width}px`;
+        el.style.height = `${config.height}px`;
+        el.style.boxSizing = 'border-box';
+        el.style.border = '1px solid rgba(0,123,255,0.35)';
+        el.style.backgroundColor = 'rgba(0,123,255,0.06)';
+        el.style.cursor = 'grab';
+
+        if (element === 'foto') {
+            const img = document.createElement('img');
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.src = '/static/fotos_alumnos/default.jpg';
+            el.appendChild(img);
+        } else if (element === 'qr') {
+            const img = document.createElement('img');
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'contain';
+            img.src = '/static/qrcodes/qr_placeholder.png';
+            el.appendChild(img);
+        } else {
+            const textDiv = document.createElement('div');
+            textDiv.style.width = '100%';
+            textDiv.style.height = '100%';
+            textDiv.style.display = 'flex';
+            textDiv.style.alignItems = 'center';
+            textDiv.style.justifyContent = 'center';
+            textDiv.style.overflow = 'hidden';
+            textDiv.style.padding = '4px';
+            textDiv.style.textAlign = 'center';
+            
+            switch(element) {
+                case 'nombre':
+                    textDiv.style.fontSize = '12px';
+                    textDiv.style.fontWeight = 'bold';
+                    textDiv.style.whiteSpace = 'pre-wrap';
+                    textDiv.style.wordBreak = 'break-all';
+                    textDiv.style.lineHeight = '1.1';
+                    textDiv.style.display = 'flex';
+                    textDiv.style.flexDirection = 'column';
+                    textDiv.style.justifyContent = 'center';
+                    textDiv.innerText = 'NOMBRE\nAPELLIDOS';
+                    break;
+                case 'curso':
+                    textDiv.style.fontSize = '10px';
+                    textDiv.style.fontWeight = 'bold';
+                    textDiv.style.color = '#ffffff';
+                    textDiv.style.whiteSpace = 'nowrap';
+                    textDiv.style.overflow = 'hidden';
+                    textDiv.style.textOverflow = 'ellipsis';
+                    textDiv.innerText = 'CURSO';
+                    break;
+                case 'turno':
+                    textDiv.style.fontSize = '10px';
+                    textDiv.style.fontWeight = 'bold';
+                    textDiv.style.whiteSpace = 'nowrap';
+                    textDiv.style.overflow = 'hidden';
+                    textDiv.style.textOverflow = 'ellipsis';
+                    textDiv.style.color = '#0775b0';
+                    textDiv.innerText = 'TURNO';
+                    break;
+                case 'sede':
+                    textDiv.style.fontSize = '14px';
+                    textDiv.style.fontWeight = 'bold';
+                    textDiv.style.color = '#0775b0';
+                    textDiv.style.whiteSpace = 'nowrap';
+                    textDiv.style.overflow = 'hidden';
+                    textDiv.style.textOverflow = 'ellipsis';
+                    textDiv.innerText = 'SEDE';
+                    break;
+            }
+            el.appendChild(textDiv);
+        }
+
+        previewArea.appendChild(el);
+    });
+
+    // Inicializar interactjs
+    interact('.position-absolute')
+        .draggable({
+            inertia: false,
+            modifiers: [
+                interact.modifiers.restrictRect({
+                    restriction: 'parent'
+                })
+            ],
+            listeners: {
+                move: dragMoveListener,
+                start: function(event) {
+                    event.target.style.cursor = 'grabbing';
+                    event.target.style.zIndex = '1000';
+                },
+                end: function(event) {
+                    event.target.style.cursor = 'grab';
+                    event.target.style.zIndex = '1';
+                }
+            }
+        })
+        .resizable({
+            edges: { left: true, right: true, bottom: true, top: true },
+            margin: 8,
+            modifiers: [
+                interact.modifiers.restrictSize({
+                    min: { width: 50, height: 20 }
+                })
+            ]
+        })
+        .on('resizemove', function(event) {
+            const target = event.target;
+            const left = (parseFloat(target.style.left) || 0) + event.deltaRect.left;
+            const top = (parseFloat(target.style.top) || 0) + event.deltaRect.top;
+            target.style.width = `${Math.round(event.rect.width)}px`;
+            target.style.height = `${Math.round(event.rect.height)}px`;
+            target.style.left = `${Math.round(left)}px`;
+            target.style.top = `${Math.round(top)}px`;
+            // limpiar transform y dataset para evitar drift
+            target.style.transform = '';
+            target.removeAttribute('data-x');
+            target.removeAttribute('data-y');
+
+            updateConfigFromElement(target);
+        });
+}
+
+function dragMoveListener(event) {
+    const target = event.target;
+    const left = (parseFloat(target.style.left) || 0) + event.dx;
+    const top = (parseFloat(target.style.top) || 0) + event.dy;
+    target.style.left = `${Math.round(left)}px`;
+    target.style.top = `${Math.round(top)}px`;
+    // limpiar transform y dataset por coherencia
+    target.style.transform = '';
+    target.removeAttribute('data-x');
+    target.removeAttribute('data-y');
+
+    updateConfigFromElement(target);
+}
+
+function updateConfigFromElement(element) {
+    const elementId = element.id.replace('preview_', '');
+    const x = parseFloat(element.style.left) || 0;
+    const y = parseFloat(element.style.top) || 0;
+    currentConfig[currentFormat][elementId] = {
+        x: Math.round(x),
+        y: Math.round(y),
+        width: parseInt(element.style.width),
+        height: parseInt(element.style.height)
+    };
+    
+    if (elementId === selectedElement) {
+        updateInputs();
+    }
+}
+
+// Evento de cambio de formato
+document.getElementById('formatoSelect').addEventListener('change', (e) => {
+    currentFormat = e.target.value;
+    updatePreview();
+    updateInputs();
+});
+
+// Actualizar cuando cambian los inputs
+['posX', 'posY', 'width', 'height'].forEach(id => {
+    document.getElementById(id).addEventListener('change', (e) => {
+        const key = id.replace('pos', '').toLowerCase();
+        currentConfig[currentFormat][selectedElement][key] = parseInt(e.target.value);
+        updatePreview();
+    });
+});
+
+// Selección de elementos
+document.querySelectorAll('[data-element]').forEach(button => {
+    button.addEventListener('click', (e) => {
+        document.querySelectorAll('[data-element]').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        selectedElement = e.target.dataset.element;
+        updateInputs();
+    });
+});
+
+// Guardar configuración
+document.getElementById('btnGuardar').addEventListener('click', async () => {
+    try {
+        const response = await fetch('/save_fotocheck_config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(currentConfig)
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success position-fixed top-0 start-50 translate-middle-x mt-3';
+            alert.style.zIndex = '9999';
+            alert.textContent = '✅ Configuración guardada correctamente';
+            document.body.appendChild(alert);
+            setTimeout(() => alert.remove(), 2000);
+        }
+    } catch (error) {
+        console.error('Error al guardar:', error);
+        alert('❌ Error al guardar la configuración');
+    }
+});
+
+// Cargar configuración inicial
+async function initConfig() {
+    try {
+        const response = await fetch('/get_fotocheck_config');
+        const config = await response.json();
+        
+        if (config && Object.keys(config).length) {
+            // Mantener estructura base pero actualizar con valores guardados
+            for (const format in defaultConfig) {
+                if (!config[format]) config[format] = {};
+                for (const element in defaultConfig[format]) {
+                    config[format][element] = {
+                        ...defaultConfig[format][element],
+                        ...config[format][element]
+                    };
+                }
+            }
+            currentConfig = config;
+        }
+        
+        updatePreview();
+        updateInputs();
+    } catch (error) {
+        console.error('Error cargando configuración:', error);
+        currentConfig = JSON.parse(JSON.stringify(defaultConfig));
+        updatePreview();
+        updateInputs();
+    }
+}
+
+// Iniciar
+initConfig();
+</script>
+</body>
+</html>

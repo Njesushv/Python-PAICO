@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Generar Fotocheck</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #edf2f7, #e2e8f0);
+            font-family: 'Segoe UI', sans-serif;
+            padding: 40px;
+        }
+    .fotocheck-frame {
+      position: relative;
+      width: 100%;
+      max-width: 360px; /* escala aproximada */
+      aspect-ratio: 638 / 1016; /* proporción real confirmada */
+      background-size: cover;
+      background-position: center;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .fc-item { position: absolute; font-family: 'Arial', sans-serif; line-height:1.1; text-align:center; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+    .fc-item img { width:100%; height:100%; object-fit:cover; }
+    .fc-qr canvas { width:100%!important; height:100%!important; }
+    .small-hint { font-size: .75rem; }
+    </style>
+</head>
+
+
+
+
+
+<body>
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="m-0"><i class="bi bi-person-badge"></i> Generar Fotocheck Individual</h2>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-light btn-sm">
+      <i class="bi bi-arrow-left-circle"></i> Volver
+    </a>
+  </div>
+  <p class="text-muted">Busca al alumno por nombre, DNI o código; o filtra por curso/sede.</p>
+  <hr>
+
+<div class="col-md-3">
+    <label class="form-label fw-bold">Tipo</label>
+    <select id="tipoPersona" class="form-select">
+        <option value="alumno">Alumno</option>
+        <option value="docente">Docente</option>
+    </select>
+</div>
+
+
+  <!-- Filtros y búsqueda -->
+  <div class="card p-3 shadow-sm mb-3">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-6">
+        <label class="form-label fw-bold">Buscar</label>
+        <input type="text" id="searchInput" class="form-control" placeholder="Nombre, DNI o código">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label fw-bold">Curso</label>
+        <select id="filterCurso" class="form-select">
+          <option value="">Todos</option>
+          {% for c in cursos %}
+            <option value="{{ c.id_curso }}">{{ c.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label fw-bold">Sede</label>
+        <select id="filterSede" class="form-select">
+          <option value="">Todas</option>
+          {% for s in sedes %}
+            <option value="{{ s.id_sede }}">{{ s.nombre_sede }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-7">
+      <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="fw-bold">Resultados</span>
+          <small id="resultCount" class="text-muted"></small>
+        </div>
+        <div class="list-group list-group-flush" id="resultList" style="max-height: 380px; overflow:auto;">
+          {% for a in alumnos %}
+          <button class="list-group-item list-group-item-action result-item" type="button"
+                  data-id="{{ a.id_alumno }}" data-nombre="{{ a.nombre_completo }}" data-dni="{{ a.dni }}"
+                  data-codigo="{{ a.codigo }}" data-curso="{{ a.curso }}" data-turno="{{ a.turno }}" data-sede="{{ a.sede }}">
+            <div class="d-flex w-100 justify-content-between">
+              <h6 class="mb-1">{{ a.nombre_completo }}</h6>
+              <small class="text-muted">{{ a.dni }}</small>
+            </div>
+            <small class="text-muted">{{ a.curso or 'Sin curso' }} · {{ a.turno or 'Sin turno' }} · {{ a.sede or 'Sin sede' }}</small>
+          </button>
+          {% endfor %}
+        </div>
+        <div class="card-footer text-center">
+          <button id="btnLoadMore" class="btn btn-sm btn-outline-secondary">Cargar más</button>
+        </div>
+      </div>
+      <div class="mt-3">
+        <small class="text-muted">Sugerencia: escribe al menos 2 caracteres para buscar.</small>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <form method="POST" class="card p-4 shadow-sm">
+        <input type="hidden" name="id_alumno" id="id_alumno" required>
+        <div class="mb-3">
+          <label for="tipo" class="form-label fw-bold">Formato</label>
+          <select name="tipo" id="tipo" class="form-select" required>
+            <option value="">-- Selecciona formato --</option>
+            <option value="jgm">JGM</option>
+            <option value="icilt">ICILT</option>
+          </select>
+        </div>
+        <div class="d-grid gap-2">
+          <button id="btnGenerar" type="submit" class="btn btn-primary" disabled>
+            <i class="bi bi-card-image"></i> Generar Fotocheck
+          </button>
+          <a href="{{ url_for('editor_fotocheck') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-sliders"></i> Editor de Fotocheck
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+
+
+
+
+
+  <!-- Vista previa del alumno y fotocheck (columna responsive) -->
+  <div id="previewContainer" class="mt-4 d-none">
+    <div class="row g-3">
+      <div class="col-lg-7">
+        <h4>Datos del Alumno o Docente</h4>
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-5">
+                <div class="position-relative">
+                  <img id="previewFoto" class="img-fluid rounded mb-2" alt="Foto del alumno">
+                  <input type="file" id="fotoUpload" class="form-control" accept="image/*">
+                </div>
+              </div>
+              <div class="col-md-7">
+                <h5 id="previewNombre" class="mb-2"></h5>
+                <p id="previewCurso" class="mb-1 small"></p>
+                <p id="previewTurno" class="text-primary mb-1 small"></p>
+                <p id="previewSede" class="mb-1 small"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <div class="col-lg-5">
+        <h4 class="mb-2">Vista previa del Fotocheck</h4>
+        <div id="fotocheckPreview" class="fotocheck-frame bg-light">
+          <div class="text-muted w-100 h-100 d-flex align-items-center justify-content-center" id="fcPlaceholder">Selecciona formato y alumno...</div>
+        </div>
+        <div class="small text-muted small-hint mt-2">La vista previa usa la configuración guardada. Generación final puede ajustar tipografías.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+<script>
+(function(){
+  const formatoSelect = document.getElementById('tipo');
+  const tipoPersona = document.getElementById('tipoPersona');
+
+  let fotocheckConfigCache = null;
+  const fcContainer = document.getElementById('fotocheckPreview');
+  const fcPlaceholder = document.getElementById('fcPlaceholder');
+
+  async function loadConfig(){
+    if(fotocheckConfigCache) return fotocheckConfigCache;
+    try {
+      const r = await fetch('/get_fotocheck_config');
+      fotocheckConfigCache = await r.json();
+    } catch(e){ fotocheckConfigCache = {}; }
+    return fotocheckConfigCache;
+  }
+
+  function clearFotocheck(){
+    [...fcContainer.querySelectorAll('.fc-item')].forEach(el=>el.remove());
+    if(fcPlaceholder) fcPlaceholder.classList.remove('d-none');
+  }
+
+  function px(v){ return Math.max(1, Math.round(v)); }
+
+  function renderFotocheck(alumnoData){
+    const formato = formatoSelect.value || 'jgm';
+    if(!alumnoData || !alumnoData.codigo){ clearFotocheck(); return; }
+    loadConfig().then(cfg => {
+      const formatCfg = cfg[formato];
+  const baseW = 638; // ancho lógico actualizado
+      const scale = fcContainer.clientWidth / baseW;
+      clearFotocheck();
+      if(fcPlaceholder) fcPlaceholder.classList.add('d-none');
+      // Fondo
+      fcContainer.style.backgroundImage = `url(/static/fondos/${formato}_template.jpg)`;
+      if(!formatCfg){
+        // fallback simple central
+        addTextBox({x: baseW*0.1, y: 50, width: baseW*0.8, height:100}, alumnoData.nombre?.toUpperCase()||'', 'nombre', formato, scale);
+        return;
+      }
+      // FOTO
+      if(formatCfg.foto){
+        addImageBox(formatCfg.foto, `/static/fotos_alumnos/${alumnoData.codigo}.jpg?v=${Date.now()}`);
+      }
+      // QR
+      if(formatCfg.qr){ addQRBox(formatCfg.qr, alumnoData); }
+      // Textos
+      ['nombre','turno','curso','sede'].forEach(k=>{
+        if(formatCfg[k]){
+          let txt = '';
+          if(k === 'nombre') txt = (alumnoData.nombre||'').toUpperCase();
+          else txt = alumnoData[k] || '';
+          addTextBox(formatCfg[k], txt, k, formato, scale);
+        }
+      });
+    });
+  }
+
+
+
+  function addImageBox(box, src){
+    const el = document.createElement('div');
+    el.className = 'fc-item';
+    positionBox(el, box);
+    const img = document.createElement('img');
+    img.src = src;
+    img.onerror = ()=>{ img.src='/static/fotos_alumnos/default.jpg'; };
+    el.appendChild(img);
+    fcContainer.appendChild(el);
+  }
+
+  function addQRBox(box, alumnoData){
+    const wrap = document.createElement('div');
+    wrap.className = 'fc-item fc-qr';
+    positionBox(wrap, box);
+    const qrCanvas = document.createElement('canvas');
+    wrap.appendChild(qrCanvas);
+    fcContainer.appendChild(wrap);
+    try {
+      const codigo_qr = alumnoData.codigo || '';
+      const dni_qr = alumnoData.dni || '';
+      const payload = codigo_qr ? `DNI:${dni_qr}|COD:${codigo_qr}` : `DNI:${dni_qr}`;
+      new QRious({ element: qrCanvas, value: payload, size: Math.min(qrCanvas.parentElement.clientWidth, qrCanvas.parentElement.clientHeight) });
+    } catch(e){
+      qrCanvas.getContext('2d').fillStyle='#999';
+      qrCanvas.getContext('2d').fillRect(0,0,qrCanvas.width,qrCanvas.height);
+    }
+  }
+
+  function colorFor(formato, campo){
+    const colors = {
+      jgm: { nombre:'#000', curso:'#ffffff', turno:'#0775b0', sede:'#0775b0' },
+      icilt: { nombre:'#000', curso:'#ffffff', turno:'#0775b0', sede:'#0775b0' }
+    };
+    return (colors[formato] && colors[formato][campo]) || '#000';
+  }
+
+  function splitNameTwoLines(name){
+    if(!name) return [''];
+    const words = name.trim().split(/\s+/).filter(Boolean);
+    if(words.length <= 2){
+      return words.length <= 1 ? [words.join(' ')] : [words.slice(0,-1).join(' '), words.slice(-1).join(' ')];
+    }
+    const total = words.reduce((acc,w)=>acc+w.length,0);
+    const half = total / 2.0;
+    let acc=0, best=1;
+    for(let i=0;i<words.length-1;i++){
+      acc += words[i].length;
+      if(Math.abs(acc-half) < Math.abs(words.slice(0,best).join('').length - half)) best = i+1;
+    }
+    return [words.slice(0,best).join(' '), words.slice(best).join(' ')];
+  }
+
+  function addTextBox(box, texto, campo, formato, scale){
+    const el = document.createElement('div');
+    el.className = 'fc-item';
+    positionBox(el, box);
+    el.style.color = colorFor(formato, campo);
+    const maxSize = 30; // valor base
+    el.style.fontWeight = '600';
+    el.style.fontSize = px(maxSize * scale) + 'px';
+    if(campo === 'nombre'){
+      const lines = splitNameTwoLines(texto);
+      el.innerHTML = lines.map(l=>l).join('<br>');
+    } else {
+      el.textContent = texto;
+    }
+    fcContainer.appendChild(el);
+    shrinkToFit(el);
+  }
+
+  function shrinkToFit(el){
+    let tries = 20;
+    while(tries-- > 0 && (el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth)){
+      const sz = parseFloat(getComputedStyle(el).fontSize);
+      if(sz < 8) break;
+      el.style.fontSize = (sz - 1) + 'px';
+    }
+  }
+
+  function positionBox(el, box){
+  const baseW = 638;
+    const scale = fcContainer.clientWidth / baseW;
+    el.style.left = px(box.x * scale) + 'px';
+    el.style.top = px(box.y * scale) + 'px';
+    el.style.width = px(box.width * scale) + 'px';
+    el.style.height = px(box.height * scale) + 'px';
+  }
+
+  // Base selection logic + fotocheck render unified
+  function selectAlumno(d){
+    hiddenId.value = d.id;
+    btnGenerar.disabled = !hiddenId.value;
+    // Update textual preview
+    const preview = document.getElementById('previewContainer');
+    document.getElementById('previewNombre').textContent = d.nombre || '';
+    document.getElementById('previewCurso').textContent = d.curso || 'Sin curso asignado';
+    document.getElementById('previewTurno').textContent = d.turno || 'Sin turno asignado';
+    document.getElementById('previewSede').textContent = d.sede || 'Sin sede asignada';
+
+    const previewFoto = document.getElementById('previewFoto');
+    previewFoto.src = `/static/fotos_alumnos/${d.codigo}.jpg?v=${Date.now()}`;
+    previewFoto.onerror = () => { previewFoto.src = '/static/fotos_alumnos/default.jpg'; };
+
+    const fotoUpload = document.getElementById('fotoUpload');
+    fotoUpload.value = '';
+    fotoUpload.onchange = function(){
+      const file = this.files[0]; if(!file) return;
+      const fd = new FormData(); fd.append('foto', file);
+      fetch(`/upload_student_photo/${d.codigo}`, { method:'POST', body: fd })
+        .then(r=>r.json()).then(j=>{ if(j.success){
+          previewFoto.src = `/static/fotos_alumnos/${d.codigo}.jpg?v=${Date.now()}`;
+          renderFotocheck(d);
+        }});
+    };
+    preview.classList.remove('d-none');
+    renderFotocheck(d);
+  }
+
+  formatoSelect.addEventListener('change', ()=>{
+    // Habilitar generación si ya existe alumno seleccionado
+    const hasAlumno = !!hiddenId.value;
+    const hasFormato = !!formatoSelect.value;
+    btnGenerar.disabled = !(hasAlumno && hasFormato);
+    if(!hasAlumno){ clearFotocheck(); return; }
+    // Usar objeto global guardado para evitar reconstrucciones inconsistentes
+    const d = window.__alumnoSeleccionado;
+    if(d && hasFormato){ renderFotocheck(d); } else { clearFotocheck(); }
+ 
+  tipoPersona.addEventListener('change', () => {
+      // Reset de búsqueda y resultados
+      state.offset = 0;
+      fetchSearch(false);
+
+      // Reset selección
+      hiddenId.value = '';
+      btnGenerar.disabled = true;
+      clearFotocheck();
+
+      // Actualizar nombre del hidden (id_alumno ↔ id_docente)
+      syncHiddenName();
+  });
+
+
+
+
+ tipoPersona.addEventListener('change', () => {
+    state.offset = 0;
+    fetchSearch(false);
+});
+
+ 
+ 
+  });
+  const resultList = document.getElementById('resultList');
+  const resultCount = document.getElementById('resultCount');
+  const btnLoadMore = document.getElementById('btnLoadMore');
+  const inputQ = document.getElementById('searchInput');
+  const selCurso = document.getElementById('filterCurso');
+  const selSede = document.getElementById('filterSede');
+  const hiddenId = document.getElementById('id_alumno');
+  const btnGenerar = document.getElementById('btnGenerar');
+
+  const form = document.querySelector('form');
+
+  form.addEventListener('submit', function (e) {
+      if (tipoPersona.value === 'docente') {
+          // 🔗 Docente → generar_qr_docente
+          this.action = "{{ url_for('generar_qr_docente') }}";
+      } else {
+          // 🔗 Alumno → generar_fotocheck normal
+          this.action = "{{ url_for('generar_fotocheck') }}";
+      }
+  });
+
+
+
+
+  function syncHiddenName() {
+      if (tipoPersona.value === "docente") {
+          hiddenId.name = "id_docente";   // 👉 esto es lo que espera generar_qr_docente
+      } else {
+          hiddenId.name = "id_alumno";    // 👉 esto es lo que espera generar_fotocheck
+      }
+  }
+
+  // Llamar una vez al inicio
+  syncHiddenName();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  let state = { q:'', curso:'', sede:'', offset:0, limit:30, loading:false, lastCount:0 };
+
+  function renderItems(items, append=false){
+    if(!append){ resultList.innerHTML = ''; }
+
+    const esDocente = (tipoPersona.value === "docente");
+
+    items.forEach(a => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'list-group-item list-group-item-action result-item';
+
+      // 🔑 OJO: aquí diferenciamos alumno vs docente
+      const dataObj = {
+        id: esDocente ? a.id_docente : a.id_alumno,
+        nombre: a.nombre_completo || '',
+        dni: a.dni || '',
+        codigo: a.codigo || '',
+        curso: a.curso || '',
+        turno: a.turno || '',
+        sede: a.sede || ''
+      };
+
+      btn.innerHTML = `
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1">${dataObj.nombre}</h6>
+          <small class="text-muted">${dataObj.dni}</small>
+        </div>
+        <small class="text-muted">
+          ${dataObj.curso || 'Sin curso'} · 
+          ${dataObj.turno || 'Sin turno'} · 
+          ${dataObj.sede || 'Sin sede'}
+        </small>
+      `;
+      btn.addEventListener('click', () => selectAlumno(dataObj));
+      resultList.appendChild(btn);
+    });
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // Attach listeners for server-rendered initial list (alumnos al inicio)
+  document.querySelectorAll('#resultList .result-item').forEach(btn => {
+    if(!btn.__bound){
+      btn.__bound = true;
+      const dataObj = {
+        id: btn.getAttribute('data-id'),
+        nombre: btn.getAttribute('data-nombre'),
+        dni: btn.getAttribute('data-dni'),
+        codigo: btn.getAttribute('data-codigo'),
+        curso: btn.getAttribute('data-curso'),
+        turno: btn.getAttribute('data-turno'),
+        sede: btn.getAttribute('data-sede')
+      };
+      btn.addEventListener('click', () => selectAlumno(dataObj));
+    }
+  });
+
+  function updateCount(count){
+    resultCount.textContent = count ? `${count} resultados` : '';
+  }
+
+  async function fetchSearch(append=false){
+    if(state.loading) return; 
+    state.loading = true;
+
+    const params = new URLSearchParams({
+      q: state.q, 
+      curso: state.curso, 
+      sede: state.sede,
+      limit: state.limit.toString(), 
+      offset: state.offset.toString()
+    });
+
+    const endpoint = tipoPersona.value === "docente"
+      ? "/api/docentes_search"
+      : "/api/alumnos_search";
+
+    const res = await fetch(`${endpoint}?${params.toString()}`);
+    const data = await res.json();
+
+    const results = data.results || [];
+    // alumnos: viene data.count, docentes: no; usamos length como backup
+    state.lastCount = (data.count != null) ? data.count : results.length;
+
+    renderItems(results, append);
+    updateCount(state.offset + state.lastCount);
+    btnLoadMore.disabled = state.lastCount < state.limit;
+    state.loading = false;
+  }
+
+  const debounce = (fn, ms=250) => {
+    let t; 
+    return (...args)=>{ 
+      clearTimeout(t); 
+      t = setTimeout(()=>fn(...args), ms); 
+    };
+  };
+
+  const triggerSearch = debounce(()=>{
+    state.offset = 0; 
+    fetchSearch(false);
+  }, 300);
+
+  inputQ.addEventListener('input', (e)=>{
+    state.q = e.target.value.trim(); 
+    triggerSearch(); 
+  });
+  selCurso.addEventListener('change', (e)=>{
+    state.curso = e.target.value; 
+    triggerSearch(); 
+  });
+  selSede.addEventListener('change', (e)=>{
+    state.sede = e.target.value; 
+    triggerSearch(); 
+  });
+  btnLoadMore.addEventListener('click', ()=>{
+    state.offset += state.limit; 
+    fetchSearch(true); 
+  });
+
+
+  // 🔁 Cambiar el name del hidden según tipoPersona
+  function syncHiddenName() {
+    if (tipoPersona.value === 'docente') {
+      hiddenId.name = 'id_docente';   // lo que espera generar_qr_docente
+    } else {
+      hiddenId.name = 'id_alumno';    // lo que espera generar_fotocheck
+    }
+  }
+
+  syncHiddenName(); // inicial
+
+  tipoPersona.addEventListener('change', () => {
+    // reset de estado
+    state.offset = 0;
+    hiddenId.value = '';
+    btnGenerar.disabled = true;
+    clearFotocheck();
+    syncHiddenName();
+    fetchSearch(false);  // recargar lista como docente/alumno
+  });
+
+  // 🔗 Redirigir el submit al endpoint correcto
+  form.addEventListener('submit', function (e) {
+    if (tipoPersona.value === 'docente') {
+      this.action = "{{ url_for('generar_qr_docente') }}";   // 👉 AQUÍ ENLAZAS TU RUTA
+    } else {
+      this.action = "{{ url_for('generar_fotocheck') }}";
+    }
+  });
+
+  function selectAlumno(d){
+    window.__alumnoSeleccionado = d;
+    hiddenId.value = d.id;
+    btnGenerar.disabled = !(hiddenId.value && formatoSelect.value);
+
+    const preview = document.getElementById('previewContainer');
+    document.getElementById('previewNombre').textContent = d.nombre || '';
+    document.getElementById('previewCurso').textContent = d.curso || 'Sin curso asignado';
+    document.getElementById('previewTurno').textContent = d.turno || 'Sin turno asignado';
+    document.getElementById('previewSede').textContent = d.sede || 'Sin sede asignada';
+
+    const previewFoto = document.getElementById('previewFoto');
+    previewFoto.src = `/static/fotos_alumnos/${d.codigo}.jpg?v=${Date.now()}`;
+    previewFoto.onerror = () => { previewFoto.src = '/static/fotos_alumnos/default.jpg'; };
+
+    const fotoUpload = document.getElementById('fotoUpload');
+    fotoUpload.value = '';
+    fotoUpload.onchange = function(){
+      const file = this.files[0]; 
+      if(!file) return;
+      const fd = new FormData(); 
+      fd.append('foto', file);
+      fetch(`/upload_student_photo/${d.codigo}`, { method:'POST', body: fd })
+        .then(r=>r.json())
+        .then(j=>{ 
+          if(j.success){
+            previewFoto.src = `/static/fotos_alumnos/${d.codigo}.jpg?v=${Date.now()}`;
+            if(formatoSelect.value){ renderFotocheck(d); }
+          }
+        });
+    };
+
+    preview.classList.remove('d-none');
+    if(formatoSelect.value){ 
+      renderFotocheck(d); 
+    } else { 
+      clearFotocheck(); 
+    }
+  }
+
+
+
+
+
+  // Cargar recientes (solo aplica a alumnos, está bien así)
+  (async function loadRecents(){
+    try{
+      const r = await fetch('/api/alumnos_recientes');
+      const j = await r.json();
+      const recs = j.recientes || [];
+      if(recs.length){
+        const wrap = document.createElement('div');
+        wrap.className = 'p-2 border-bottom';
+        const title = document.createElement('div');
+        title.className = 'small text-muted mb-1';
+        title.textContent = 'Recientes';
+        wrap.appendChild(title);
+        const cont = document.createElement('div');
+        cont.className = 'd-flex flex-wrap gap-2';
+        recs.forEach(r=>{
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'btn btn-sm btn-outline-secondary';
+          b.textContent = r.nombre_completo;
+          b.addEventListener('click', ()=>{
+            selectAlumno({
+              id: r.id_alumno,
+              nombre: r.nombre_completo,
+              dni: r.dni,
+              codigo: r.codigo,
+              curso: r.curso || '',
+              turno: r.turno || '',
+              sede: r.sede || ''
+            });
+          });
+          cont.appendChild(b);
+        });
+        wrap.appendChild(cont);
+        resultList.parentElement.insertBefore(wrap, resultList);
+      }
+    }catch(e){ /* ignore */ }
+  })();
+
+  btnGenerar.disabled = true;
+
+})();
+</script>
+</body>
+</html>

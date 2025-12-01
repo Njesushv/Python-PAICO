@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Agregar Sede</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: "Segoe UI", sans-serif;
+            padding: 40px;
+        }
+        .card {
+            max-width: 600px;
+            margin: 0 auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #1d3557;
+            color: white;
+            font-weight: 600;
+        }
+        .btn {
+            border-radius: 20px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="card-header text-center">
+            <i class="bi bi-building-add"></i> Agregar Nueva Sede
+        </div>
+        <div class="card-body">
+            <form method="POST" novalidate>
+                <div class="mb-3">
+                    <label class="form-label">Nombre de la Sede</label>
+                    <input type="text" name="nombre_sede" class="form-control" required maxlength="100">
+                    <div class="invalid-feedback">Por favor ingrese el nombre de la sede.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Dirección</label>
+                    <input type="text" name="direccion" class="form-control" maxlength="150">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Teléfono</label>
+                    <input type="text" name="telefono" class="form-control" maxlength="15">
+                </div>
+
+
+
+<div class="mb-3">
+  <label class="form-label">Responsable principal</label>
+  <select name="id_responsable_1" class="form-select" required>
+      <option value="">-- Selecciona el responsable principal --</option>
+      {% for r in responsables %}
+          <option value="{{ r.id_responsable }}">{{ r.nombres }}</option>
+      {% endfor %}
+  </select>
+  <div class="invalid-feedback">Seleccione un responsable principal.</div>
+</div>
+
+<div class="mb-3">
+  <label class="form-label">Responsable secundario (opcional)</label>
+  <select name="id_responsable_2" class="form-select">
+      <option value="">-- Ninguno --</option>
+      {% for r in responsables %}
+          <option value="{{ r.id_responsable }}">{{ r.nombres }}</option>
+      {% endfor %}
+  </select>
+</div>
+
+
+
+
+
+
+
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('administrar_sedes') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-save"></i> Guardar Sede
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Validación visual Bootstrap
+        (function () {
+            'use strict';
+            const forms = document.querySelectorAll('form');
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestión de Horarios</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+    }
+
+    .contenedor-grande {
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    /* CARD PRINCIPAL */
+    .card {
+      border-radius: 20px;
+      overflow: hidden;
+      animation: fadeIn .35s ease;
+    }
+
+    .card-header {
+      background-color: #1d3557;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .btn {
+      border-radius: 20px;
+      font-weight: 500;
+      padding: 6px 14px !important;
+      font-size: 13px !important;
+    }
+
+    .btn-add {
+      background:#2a9d8f;
+      border-color:#2a9d8f;
+      color:#fff;
+    }
+    .btn-add:hover {
+      background:#21867a;
+      border-color:#21867a;
+    }
+
+    .btn-light {
+      border-radius: 20px;
+    }
+
+    .btn-outline-primary {
+      border-radius: 20px;
+    }
+
+    /* TARJETAS DE HORARIO */
+    .card-horario {
+      border: none;
+      border-left: 6px solid #457b9d;
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 4px 10px rgba(0,0,0,.06);
+      transition: .25s;
+    }
+    .card-horario:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 16px rgba(0,0,0,.12);
+    }
+
+    .card-body-horario {
+      padding: 15px 20px;
+    }
+
+    .horario-title {
+      font-size: 1.05rem;
+      color: #1d3557;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .horario-desc {
+      color: #555;
+      font-size: .95rem;
+    }
+
+    .btn-delete {
+      color:#dc3545;
+      border:none;
+      background:transparent;
+      transition:.2s;
+    }
+    .btn-delete:hover {
+      color:#a71d2a;
+      transform:scale(1.2);
+    }
+
+    .badge-soft {
+      background:#e9f5ff;
+      color:#0b63a6;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container contenedor-grande mt-4">
+  <div class="card shadow">
+    <!-- HEADER -->
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="bi bi-clock-history"></i> Gestión de Horarios
+      </h5>
+      <div>
+        <a href="{{ url_for('añadir_horario') }}" class="btn btn-add btn-sm me-2">
+          <i class="bi bi-plus-circle"></i> Añadir Horario
+        </a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-light btn-sm">
+          <i class="bi bi-arrow-left-circle"></i> Volver
+        </a>
+      </div>
+    </div>
+
+    <!-- BODY -->
+    <div class="card-body">
+      {% if horarios %}
+        <div class="row g-3">
+          {% for h in horarios %}
+          <div class="col-md-6 col-lg-4">
+            <div class="card-horario">
+              <div class="card-body-horario">
+                <h6 class="horario-title">
+                  <i class="bi bi-calendar-week"></i>
+                  {{ h.nombre_horario or h.descripcion or 'Horario' }}
+                  {% if h.activo is defined and not h.activo %}
+                    <span class="badge text-bg-secondary">Inactivo</span>
+                  {% endif %}
+                  {% if h.nota %}
+                    <span class="badge badge-soft rounded-pill">
+                      <i class="bi bi-info-circle"></i> Nota
+                    </span>
+                  {% endif %}
+                </h6>
+
+                {% if h.dias %}
+                  <p class="horario-desc mb-1">
+                    <i class="bi bi-calendar2-week"></i> {{ h.dias }}
+                  </p>
+                {% endif %}
+
+                <p class="horario-desc mb-1">
+                  <i class="bi bi-clock"></i>
+                  {{ h.hora_inicio or '—' }} – {{ h.hora_fin or '—' }}
+                </p>
+
+                <p class="horario-desc mb-1">
+                  <i class="bi bi-hourglass-split"></i>
+                  Tol. inicio:
+                  {{ (h.tolerancia_inicio if h.tolerancia_inicio is not none
+                       else (h.tolerancia if h.tolerancia is not none else 0)) }}′
+                </p>
+
+                <p class="horario-desc mb-1">
+                  <i class="bi bi-arrow-up-circle"></i>
+                  Entrada temprana: {{ h.entrada_temprana }}′ antes
+                </p>
+
+                <p class="horario-desc mb-1">
+                  <i class="bi bi-arrow-down-circle"></i>
+                  Salida temprana: {{ h.salida_temprana }}′ antes
+                </p>
+
+                {% if h.nota %}
+                  <p class="text-muted small mb-2">
+                    <i class="bi bi-sticky"></i> {{ h.nota }}
+                  </p>
+                {% endif %}
+
+                <div class="d-flex justify-content-end mt-2">
+                  <a href="{{ url_for('editar_horario', id_horario=h.id_horario) }}"
+                     class="btn btn-sm btn-outline-primary me-2"
+                     title="Editar horario">
+                    <i class="bi bi-pencil-square"></i>
+                  </a>
+
+                  <button class="btn btn-delete btn-sm"
+                          onclick="confirmarEliminacion('{{ h.id_horario }}')"
+                          title="Eliminar (inactivar)">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="alert alert-secondary text-center mt-3 mb-0">
+          <i class="bi bi-info-circle"></i> No hay horarios registrados aún.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+  function confirmarEliminacion(id) {
+    if (confirm("¿Estás seguro de eliminar este horario?")) {
+      window.location.href = `/eliminar_horario/${id}`;
+    }
+  }
+</script>
+
+</body>
+</html>

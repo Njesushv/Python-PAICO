@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Agregar Responsable</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 30px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 25px 40px;
+            max-width: 700px;
+        }
+
+        h2 {
+            font-weight: 700;
+            color: #1d3557;
+        }
+
+        label {
+            font-weight: 500;
+            color: #1d3557;
+        }
+
+        .form-control {
+            border-radius: 10px;
+        }
+
+        .btn {
+            border-radius: 25px;
+            font-weight: 500;
+            padding: 8px 20px;
+        }
+
+        .btn-primary {
+            background-color: #1d3557;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #16324f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2 class="text-center mb-4">🧑‍💼 Agregar Nuevo Responsable</h2>
+
+        <form method="POST" action="{{ url_for('agregar_responsable') }}">
+            <div class="mb-3">
+                <label for="nombres" class="form-label">Nombre completo:</label>
+                <input type="text" class="form-control" id="nombres" name="nombres" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="dni" class="form-label">DNI:</label>
+                <input type="text" class="form-control" id="dni" name="dni" maxlength="8" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="celular" class="form-label">Celular:</label>
+                <input type="text" class="form-control" id="celular" name="celular" maxlength="9">
+            </div>
+
+            <div class="mb-3">
+                <label for="correo" class="form-label">Correo:</label>
+                <input type="email" class="form-control" id="correo" name="correo">
+            </div>
+
+            <div class="mb-3">
+                <label for="cargo" class="form-label">Cargo:</label>
+                <input type="text" class="form-control" id="cargo" name="cargo" required>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('responsables') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left-circle"></i> Volver
+                </a>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Guardar Responsable
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

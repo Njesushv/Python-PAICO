@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Curso</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: "Segoe UI", sans-serif;
+        }
+        .container {
+            margin-top: 40px;
+            max-width: 900px;
+        }
+        .card-header {
+            background-color: #1d3557;
+            color: white;
+            font-weight: 600;
+        }
+        .btn {
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        .form-label.required::after {
+            content: " *";
+            color: red;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card shadow">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-journal-text"></i> Editar Curso</h5>
+            <a href="{{ url_for('administrar_cursos') }}" class="btn btn-light btn-sm">← Volver</a>
+        </div>
+
+        <div class="card-body">
+            <form method="POST" class="needs-validation" novalidate>
+                <!-- Nombre + Estado -->
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <label class="form-label required">Nombre del Curso</label>
+                        <input type="text" name="nombre"
+                               value="{{ curso.nombre }}"
+                               class="form-control"
+                               required maxlength="100">
+                        <div class="invalid-feedback">Por favor ingresa el nombre del curso.</div>
+                    </div>
+
+
+                    <div class="col-md-3">
+                        <label class="form-label">Sede</label>
+                        <select name="id_sede" class="form-select">
+                            <option value="">Sin asignar</option>
+                            {% for s in sedes %}
+                                <option value="{{ s.id_sede }}"
+                                        {% if curso.id_sede == s.id_sede %}selected{% endif %}>
+                                    {{ s.nombre_sede }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Aula + Horario -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Aula</label>
+                        <input type="text" name="aula"
+                               value="{{ curso.aula or '' }}"
+                               class="form-control" maxlength="50">
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label required">Horario</label>
+                        <select name="id_horario" class="form-select" required>
+                            <option value="">Seleccione un horario</option>
+                            {% for h in horarios %}
+                                <option value="{{ h.id_horario }}"
+                                        {% if curso.id_horario == h.id_horario %}selected{% endif %}>
+                                    {{ h.nombre_horario }} ({{ h.hora_inicio }} - {{ h.hora_fin }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">Selecciona un horario.</div>
+                    </div>
+                </div>
+
+                <!-- Duración del curso -->
+                <div class="row mb-3 mt-3">
+                    <div class="col-12">
+                        <h6 class="fw-bold text-primary mb-1">
+                            <i class="bi bi-calendar-week"></i> Duración del Curso
+                        </h6>
+                        <hr class="mt-1 mb-3">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label required">Desde</label>
+                        <input type="date" name="fecha_inicio"
+                               value="{{ curso.fecha_inicio }}"
+                               class="form-control" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label required">Hasta</label>
+                        <input type="date" name="fecha_fin"
+                               value="{{ curso.fecha_fin }}"
+                               class="form-control" required>
+                    </div>
+                </div>
+
+                <!-- Botón -->
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+})();
+</script>
+</body>
+</html>
