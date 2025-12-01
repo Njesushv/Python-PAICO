@@ -39,7 +39,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib import colors
-
+#==jhonatan hola
 #====================================================================
 # FUNCIONES AUXILIARES
 def obtener_ip_local():
@@ -7079,4 +7079,5 @@ if __name__ == "__main__":
         print("✅ Modo DESARROLLO")
         print()
         app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=True)
+
         
